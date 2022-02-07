@@ -1,0 +1,135 @@
+#version 430 core
+layout(std140) uniform;
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image2DArray uni_img_output;
+
+layout(r32f) uniform image2D uni_noise;
+
+// defines
+uniform uint DEF_CLIPMAP_LEVEL_SIZE;
+uniform float DEF_CLIPMAP_SCALE;
+uniform float DEF_TERRAIN_AMP;
+uniform float DEF_TERRAIN_SCA;
+
+uniform uint DEF_NOISE_SIZE;
+
+struct info {
+    ivec2 tex;
+    ivec2 size;
+    ivec2 start;
+    uint level;
+    float padding0;
+};
+
+uniform uni_data {
+// should at least be LEVEL_COUNT * 8
+    info instances[80];
+};
+
+vec3 noised_value(in vec2 p, out vec4 dd)
+{
+    ivec2 i = ivec2(floor(p));
+    vec2 f = fract(p);
+
+    vec2 u = f * f * f * (f * (f * 6.f - 15.f) + 10.f);
+    vec2 du = 30.f * f * f * (f * (f - 2.f) + 1.f);
+    vec2 ddu = 60.f * f * (f * (2.f * f - 3.f) + 1.f);
+
+    int s = int(DEF_NOISE_SIZE) - 1;
+    float va = imageLoad(uni_noise, (i + ivec2(0, 0)) & s).x;
+    float vb = imageLoad(uni_noise, (i + ivec2(1, 0)) & s).x;
+    float vc = imageLoad(uni_noise, (i + ivec2(0, 1)) & s).x;
+    float vd = imageLoad(uni_noise, (i + ivec2(1, 1)) & s).x;
+
+    float k0 = va;
+    float k1 = vb - va;
+    float k2 = vc - va;
+    float k4 = va - vb - vc + vd;
+
+    // n
+    float value = k0 + k1 * u.x + k2 * u.y + k4 * u.x * u.y;
+
+    // n/dx and n/dy
+    vec2 derivatives = vec2(du * (vec2(u.y, u.x) * k4 + vec2(k1, k2)));
+
+    // (n/dx)/dx
+    dd.x = ddu.x * u.y * k4 + ddu.x * k1;
+    dd.y = du.y * k4 * du.x;
+    dd.z = du.y * k4 * du.x;
+    dd.w = ddu.y * u.x * k4 + ddu.y * k2;
+
+    return vec3(value, derivatives);
+}
+
+vec3 terrain_noise(in vec2 p)
+{
+    float f = 1.9f;
+    float s = .55f;
+
+    // note: the only difference between host and device code
+    // opengl uses column-major matrices
+    const mat2 m2 = mat2(.8f, .6f, -.6f, .8f);
+    const mat2 m2t = mat2(.8f, -.6f, .6f, .8f);
+
+    float a = 0.f;
+    float b = 1.f;
+    vec2 e = vec2(0.f);
+    vec2 d = vec2(0.f);
+
+    mat2 m = mat2(1.f, 0.f, 0.f, 1.f);
+    vec2 t = vec2(0.f);
+    vec4 r = vec4(0.f);
+
+    for (int i = 0; i < 12; i++) {
+        vec4 dd;
+        vec3 n = noised_value(p, dd);
+        vec2 duxy = m * vec2(n.y, n.z);
+        t += vec2(n.y, n.z);
+        r += vec4(m * vec2(dd.x, dd.y), m * vec2(dd.z, dd.w));
+        e += vec2(n.y, n.z);
+        float term = 1.f + dot(e, e);
+        a += b * n.x / term;
+        float x = 2.f * (t.x * r.x + t.y * r.z);
+        float y = 2.f * (t.x * r.y + t.y * r.w);
+        d += b * (term * duxy - n.x * vec2(x, y)) / (term * term);
+        b *= s;
+        p = f * m2 * p;
+        m = f * m2t * m;
+    }
+
+    return vec3(a, d);
+}
+
+// take in a world-space position, return the height at that location
+// and the gradient of the terrain there
+vec3 get_terrain(in vec2 pos)
+{
+    vec3 t = terrain_noise(DEF_TERRAIN_SCA * pos);
+    float height = DEF_TERRAIN_AMP * t.x;
+    vec2 grad = DEF_TERRAIN_AMP * DEF_TERRAIN_SCA * t.yz;
+
+    return vec3(height, grad);
+}
+
+void main ()
+{
+    // index among each dimension
+    uvec3 idx = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID;
+    // z index determines which struct instance we use
+    info this_info = instances[idx.z];
+
+    // there is only work to perform if we fall in the range
+    if (idx.x < this_info.size.x && idx.y < this_info.size.y) {
+        // get world-space position
+        vec2 pos = DEF_CLIPMAP_SCALE * vec2(
+        (this_info.start + ivec2(idx.xy)) << this_info.level);
+
+        // get height and gradients
+        vec3 val = get_terrain(pos);
+
+        ivec3 tex_idx = ivec3((this_info.tex + idx.xy), this_info.level);
+        imageStore(uni_img_output, tex_idx, vec4(val, 0.f));
+    }
+}
