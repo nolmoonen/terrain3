@@ -18,7 +18,7 @@ calculated using an OpenGL compute shader.
 
 ## Performance
 
-At the lowest level of detail, the terrain is represented with a resolution of
+At its most detailed level, the terrain is represented with a resolution of
 ten centimeters. The above image displays movement at about 200 meters per
 second, which a system with a Ryzen 5 2600 and an RTX 2070 takes roughly
 `0.013-0.017` ms to update the terrain and `0.14-0.18` ms to render it at 1080p.
