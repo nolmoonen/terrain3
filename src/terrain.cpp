@@ -2,6 +2,8 @@
 #include "nmutil/io.h"
 
 #include "stb_wrapper.h"
+#include <filesystem>
+#include "app.h"
 
 nm_ret init(terrain *t)
 {
@@ -26,37 +28,29 @@ nm_ret init(terrain *t)
             debug_frag_src, norm_geom_src, norm_frag_src, water_vert_src,
             water_frag_src;
 
-    ret = nmutil::read_file(
-            &default_vert_src.text, &default_vert_src.len,
-            "../res/shader/lod.vert");
+    const std::filesystem::path default_vert_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod.vert");
+    ret = nmutil::read_file(&default_vert_src.text, &default_vert_src.len, default_vert_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &default_frag_src.text, &default_frag_src.len,
-            "../res/shader/lod.frag");
+    const std::filesystem::path default_frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod.frag");
+    ret = nmutil::read_file(&default_frag_src.text, &default_frag_src.len, default_frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &debug_vert_src.text, &debug_vert_src.len,
-            "../res/shader/lod_debug.vert");
+    const std::filesystem::path debug_vert_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_debug.vert");
+    ret = nmutil::read_file(&debug_vert_src.text, &debug_vert_src.len, debug_vert_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &debug_frag_src.text, &debug_frag_src.len,
-            "../res/shader/lod_debug.frag");
+    const std::filesystem::path debug_frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_debug.frag");
+    ret = nmutil::read_file(&debug_frag_src.text, &debug_frag_src.len, debug_frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &norm_geom_src.text, &norm_geom_src.len,
-            "../res/shader/lod_norm.geom");
+    const std::filesystem::path norm_geom_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_norm.geom");
+    ret = nmutil::read_file(&norm_geom_src.text, &norm_geom_src.len, norm_geom_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &norm_frag_src.text, &norm_frag_src.len,
-            "../res/shader/lod_norm.frag");
+    const std::filesystem::path norm_frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_norm.frag");
+    ret = nmutil::read_file(&norm_frag_src.text, &norm_frag_src.len, norm_frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &water_vert_src.text, &water_vert_src.len,
-            "../res/shader/lod_water.vert");
+    const std::filesystem::path water_vert_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_water.vert");
+    ret = nmutil::read_file(&water_vert_src.text, &water_vert_src.len, water_vert_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
-    ret = nmutil::read_file(
-            &water_frag_src.text, &water_frag_src.len,
-            "../res/shader/lod_water.frag");
+    const std::filesystem::path water_frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod_water.frag");
+    ret = nmutil::read_file(&water_frag_src.text, &water_frag_src.len, water_frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
 
     /** shader */
@@ -206,25 +200,29 @@ nm_ret init(terrain *t)
     uint8_t *data;
     int32_t x, y, n;
 
-    data = load_img("../res/tex/aerial_grass_rock_1k/diff.png", &x, &y, &n, 3);
+    const std::filesystem::path grass_diff_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("tex/aerial_grass_rock_1k/diff.png");
+    data = load_img(grass_diff_path.u8string().c_str(), &x, &y, &n, 3);
     t->grass_diff.init(GL_TEXTURE_2D);
     ret = t->grass_diff.load(data, x, y);
     free_img(data);
     if (ret == NM_FAIL) return NM_FAIL;
 
-    data = load_img("../res/tex/aerial_grass_rock_1k/norm.png", &x, &y, &n, 3);
+    const std::filesystem::path grass_norm_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("tex/aerial_grass_rock_1k/norm.png");
+    data = load_img(grass_norm_path.u8string().c_str(), &x, &y, &n, 3);
     t->grass_norm.init(GL_TEXTURE_2D);
     ret = t->grass_norm.load(data, x, y);
     free_img(data);
     if (ret == NM_FAIL) return NM_FAIL;
 
-    data = load_img("../res/tex/rock_wall_02_1k/diff.png", &x, &y, &n, 3);
+    const std::filesystem::path cliff_diff_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("tex/rock_wall_02_1k/diff.png");
+    data = load_img(cliff_diff_path.u8string().c_str(), &x, &y, &n, 3);
     t->cliff_diff.init(GL_TEXTURE_2D);
     ret = t->cliff_diff.load(data, x, y);
     free_img(data);
     if (ret == NM_FAIL) return NM_FAIL;
 
-    data = load_img("../res/tex/rock_wall_02_1k/norm.png", &x, &y, &n, 3);
+    const std::filesystem::path cliff_norm_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("tex/rock_wall_02_1k/norm.png");
+    data = load_img(cliff_norm_path.u8string().c_str(), &x, &y, &n, 3);
     t->cliff_norm.init(GL_TEXTURE_2D);
     ret = t->cliff_norm.load(data, x, y);
     free_img(data);

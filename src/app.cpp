@@ -16,6 +16,8 @@
 #include "gui.h"
 #include "axis.h"
 #include "stb_wrapper.h"
+#include <filesystem>
+#include "app.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -37,6 +39,8 @@ static operation_edit curr_edit_op = NONE;
 // can be negative
 int32_t last_mouse_x;
 int32_t last_mouse_y;
+
+const std::filesystem::path TERRAIN3_RESOURCE_DIR = RESOURCE_DIR;
 
 void update_state();
 

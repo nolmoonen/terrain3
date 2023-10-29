@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.26)
 project(terrain3)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenGL REQUIRED)
 
@@ -37,3 +38,13 @@ target_include_directories(imgui PUBLIC
 
 # link imgui
 target_link_libraries(${PROJECT_NAME} imgui)
+
+# copy resource directory to binary directory
+set(RESOURCE_DIR "${PROJECT_BINARY_DIR}/res")
+add_custom_command(
+  TARGET ${PROJECT_NAME}
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy_directory_if_different "${PROJECT_SOURCE_DIR}/res" ${RESOURCE_DIR}
+  COMMENT "Copying resources")
+target_compile_definitions(${PROJECT_NAME} PRIVATE RESOURCE_DIR="${RESOURCE_DIR}")

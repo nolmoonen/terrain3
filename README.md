@@ -25,7 +25,7 @@ second, which a system with a Ryzen 5 2600 and an RTX 2070 takes roughly
 
 ## System requirements and dependencies
 
-Windows 10. Building is tested with MSVC, but other compilers should work as
+Windows 10 and C++17. Building is tested with MSVC, but other compilers should work as
 well. The following third-party dependencies are included:
 
 * [glad2](https://gen.glad.sh/) for loading OpenGL and WGL.

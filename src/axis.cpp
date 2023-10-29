@@ -1,6 +1,8 @@
 #include "axis.h"
 #include "nmutil/gl.h"
 #include "nmutil/io.h"
+#include <filesystem>
+#include "app.h"
 
 /// Coordinate frame.
 static const struct {
@@ -33,15 +35,15 @@ nm_ret init_axis()
     nm_ret ret;
 
     nmutil::res_t vert_src{};
-    ret = nmutil::read_file(
-            &vert_src.text, &vert_src.len, "../res/shader/axis.vert");
+    const std::filesystem::path vert_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/axis.vert");
+    ret = nmutil::read_file(&vert_src.text, &vert_src.len, vert_path.u8string().c_str());
     if (ret != NM_SUCCESS) {
         return -1;
     }
 
     nmutil::res_t frag_src{};
-    ret = nmutil::read_file(
-            &frag_src.text, &frag_src.len, "../res/shader/axis.frag");
+    const std::filesystem::path frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/axis.frag");
+    ret = nmutil::read_file(&frag_src.text, &frag_src.len, frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) {
         return -1;
     }

@@ -7,6 +7,8 @@
 #include "noise.h"
 #include "nmutil/io.h"
 #include "nmutil/util.h"
+#include <filesystem>
+#include "app.h"
 
 /// The compute shader program.
 nmutil::shader_program comp_program;
@@ -49,8 +51,8 @@ nm_ret init(heightmap *hm)
 
     // compute shader
     nmutil::res_t comp_src;
-    nm_ret ret = nmutil::read_file(
-            &comp_src.text, &comp_src.len, "../res/shader/lod.comp");
+    const std::filesystem::path comp_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod.comp");
+    nm_ret ret = nmutil::read_file(&comp_src.text, &comp_src.len, comp_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
 
     nmutil::shader comp_shader;
