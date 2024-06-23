@@ -15,7 +15,7 @@ void gui_init()
     ImGui_ImplOpenGL3_Init("#version 430");
 
     ImGuiIO &io = ImGui::GetIO();
-    (void) io;
+    io.IniFilename = nullptr; // disable ini file
     // get rid of border
     ImGui::StyleColorsDark();
     io.Fonts->AddFontDefault();
