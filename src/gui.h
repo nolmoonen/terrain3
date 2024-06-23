@@ -1,9 +1,13 @@
 #ifndef TERRAIN3_GUI_H
 #define TERRAIN3_GUI_H
 
-#include "nmutil/vector.h"
+#include "window.hpp"
 
-void gui_init();
+#include <nmutil/vector.h>
+
+#include <chrono>
+
+void gui_init(window* w);
 
 void gui_cleanup();
 
@@ -17,6 +21,6 @@ void display_stats(
         std::chrono::duration<double> &update_time,
         std::chrono::duration<double> &render_time);
 
-void display_pos(vec3 pos);
+void display_pos(nm::fvec3 pos);
 
 #endif //TERRAIN3_GUI_H

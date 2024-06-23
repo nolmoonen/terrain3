@@ -7,32 +7,32 @@
 
 /// return value noise (in x) in [0,1] and its derivatives (in yz)
 /// based on https://www.shadertoy.com/view/4dXBRH
-inline vec3 noised_value(vec2 p, uint8_t *noise, uint32_t noise_dim, vec4 *dd)
+inline nm::fvec3 noised_value(nm::fvec2 p, uint8_t *noise, uint32_t noise_dim, nm::fvec4 *dd)
 {
-    ivec2 i = ivec2(floorf(p));
-    vec2 f = fractf(p);
+    nm::ivec2 i = nm::ivec2(floorf(p));
+    nm::fvec2 f = nm::fractf(p);
 
 #if 1
     // quintic interpolation
-    vec2 u = f * f * f * (f * (f * 6.f - 15.f) + 10.f);
-    vec2 du = 30.f * f * f * (f * (f - 2.f) + 1.f);
-    vec2 ddu = 60.f * f * (f * (2.f * f - 3.f) + 1.f);
+    nm::fvec2 u = f * f * f * (f * (f * 6.f - 15.f) + 10.f);
+    nm::fvec2 du = 30.f * f * f * (f * (f - 2.f) + 1.f);
+    nm::fvec2 ddu = 60.f * f * (f * (2.f * f - 3.f) + 1.f);
 #else
     // cubic interpolation
-    vec2 u = f * f * (3.f - 2.f * f);
-    vec2 du = 6.f * f * (1.f - f);
+    nm::fvec2 u = f * f * (3.f - 2.f * f);
+    nm::fvec2 du = 6.f * f * (1.f - f);
 #endif
 
     // samples in [0, 1)
     // AND is valid since noise_dim is power of two
     int32_t s = int32_t(noise_dim) - 1;
-    ivec2 idx_a = (i + ivec2(0, 0)) & s;
+    nm::ivec2 idx_a = (i + nm::ivec2(0, 0)) & s;
     float va = (float) noise[idx_a.y * noise_dim + idx_a.x] / (float) UINT8_MAX;
-    ivec2 idx_b = (i + ivec2(1, 0)) & s;
+    nm::ivec2 idx_b = (i + nm::ivec2(1, 0)) & s;
     float vb = (float) noise[idx_b.y * noise_dim + idx_b.x] / (float) UINT8_MAX;
-    ivec2 idx_c = (i + ivec2(0, 1)) & s;
+    nm::ivec2 idx_c = (i + nm::ivec2(0, 1)) & s;
     float vc = (float) noise[idx_c.y * noise_dim + idx_c.x] / (float) UINT8_MAX;
-    ivec2 idx_d = (i + ivec2(1, 1)) & s;
+    nm::ivec2 idx_d = (i + nm::ivec2(1, 1)) & s;
     float vd = (float) noise[idx_d.y * noise_dim + idx_d.x] / (float) UINT8_MAX;
 
     float k0 = va;
@@ -44,7 +44,7 @@ inline vec3 noised_value(vec2 p, uint8_t *noise, uint32_t noise_dim, vec4 *dd)
     float value = k0 + k1 * u.x + k2 * u.y + k4 * u.x * u.y;
 
     // n/dx and n/dy
-    vec2 derivatives(du * (vec2(u.y, u.x) * k4 + vec2(k1, k2)));
+    nm::fvec2 derivatives(du * (nm::fvec2(u.y, u.x) * k4 + nm::fvec2(k1, k2)));
 
     // (n/dx)/dx
     dd->x = ddu.x * u.y * k4 + ddu.x * k1;
@@ -55,51 +55,53 @@ inline vec3 noised_value(vec2 p, uint8_t *noise, uint32_t noise_dim, vec4 *dd)
     // (n/dy)/dy
     dd->w = ddu.y * u.x * k4 + ddu.y * k2;
 
-    return vec3(value, derivatives);
+    return nm::fvec3(value, derivatives.x, derivatives.y);
 }
 
 /// Note: not normalized, ranges from [0, <2].
-inline vec3 terrain_noise(
-        vec2 p, uint8_t *noise, uint32_t noise_dim)
+inline nm::fvec3 terrain_noise(
+        nm::fvec2 p, uint8_t *noise, uint32_t noise_dim)
 {
     float f = 1.9f; // lacunarity
     float s = .55f; // gain
 
-    const mat2 m2 = mat2(.8f, -.6f, .6f, .8f);  // rotation matrix
-    const mat2 m2t = mat2(.8f, .6f, -.6f, .8f); // and its transpose
+    const nm::mat2 m2 = nm::mat2(.8f, -.6f, .6f, .8f);  // rotation matrix
+    const nm::mat2 m2t = nm::mat2(.8f, .6f, -.6f, .8f); // and its transpose
 
     float a = 0.f;      // accumulated height
     float b = 1.f;      // current height multiplier
-    vec2 e = vec2(0.f); // accumulated helper value to scale the noise with
-    vec2 d = vec2(0.f); // accumulated derivative
+    nm::fvec2 e = nm::fvec2(0.f); // accumulated helper value to scale the noise with
+    nm::fvec2 d = nm::fvec2(0.f); // accumulated derivative
 
     // inverse of running derivative transform
-    mat2 m = mat2::identity();
+    nm::mat2 m = nm::mat2::identity();
     // accumulated (modified) partial derivative
-    vec2 t = vec2(0.f);
+    nm::fvec2 t = nm::fvec2(0.f);
     // accumulated (modified) 2nd partial derivative
-    vec4 r = vec4(0.f);
+    nm::fvec4 r = nm::fvec4(0.f);
 
     // every iteration, the original position is multiplied by f
     // let p' be (f * m2)^i * p
     for (uint32_t i = 0u; i < 12; i++) {
         // second order derivative
-        vec4 dd;
+        nm::fvec4 dd;
         // get value for p' = m * p and derivative
-        vec3 n = noised_value(p, noise, noise_dim, &dd);
+        nm::fvec3 n = noised_value(p, noise, noise_dim, &dd);
         // the noise derivative for p' (transform by m is part of chain rule)
         // this is actually a row vector, hence m involves the transpose of m2
-        vec2 duxy = m * vec2(n.y, n.z);
+        nm::fvec2 duxy = m * nm::fvec2(n.y, n.z);
         // accumulate the derivative for p' (without transform by m)
-        t += vec2(n.y, n.z);
+        t += nm::fvec2(n.y, n.z);
         // accumulate the second derivative for p' (without transform by m)
         // since it is the second derivative, it still has to be transformed
         // once (would be twice if we did cancel out one transform, also due
         // to the chain rule)
-        r += vec4(m * vec2(dd.x, dd.y), m * vec2(dd.z, dd.w));
+        const nm::fvec2 xy = m * nm::fvec2(dd.x, dd.y);
+        const nm::fvec2 zw = m * nm::fvec2(dd.z, dd.w);
+        r += nm::fvec4(xy.x, xy.y, zw.x, zw.y);
         // this is the accumulated factor, which is the
         // derivative for p', but with the transform by m cancelled out
-        e += vec2(n.y, n.z);
+        e += nm::fvec2(n.y, n.z);
         // the term to scale the noise value by
         float term = 1.f + dot(e, e);
         // accumulate values
@@ -109,7 +111,7 @@ inline vec3 terrain_noise(
         float x = 2.f * (t.x * r.x + t.y * r.z);
         float y = 2.f * (t.x * r.y + t.y * r.w);
         // accumulate derivative of (b * n.x / term)
-        d += b * (term * duxy - n.x * vec2(x, y)) / (term * term);
+        d += b * (term * duxy - n.x * nm::fvec2(x, y)) / (term * term);
         // scaling factor for next iteration
         b *= s;
         // accumulated transform of input point p
@@ -120,7 +122,7 @@ inline vec3 terrain_noise(
         m = f * m2t * m;
     }
 
-    return vec3(a, d);
+    return nm::fvec3(a, d.x, d.y);
 }
 
 #endif // TERRAIN3_NOISE_H

@@ -26,7 +26,7 @@ static const struct {
         {0.f,  0.f,  0.f,  .5f, .5f, 1.f}
 };
 
-static nmutil::shader_program program;
+static nm::shader_program program;
 static GLuint lines_vao;
 static GLuint lines_vbo;
 
@@ -34,16 +34,16 @@ nm_ret init_axis()
 {
     nm_ret ret;
 
-    nmutil::res_t vert_src{};
+    nm::res_t vert_src{};
     const std::filesystem::path vert_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/axis.vert");
-    ret = nmutil::read_file(&vert_src.text, &vert_src.len, vert_path.u8string().c_str());
+    ret = nm::read_file(&vert_src.text, &vert_src.len, vert_path.u8string().c_str());
     if (ret != NM_SUCCESS) {
         return -1;
     }
 
-    nmutil::res_t frag_src{};
+    nm::res_t frag_src{};
     const std::filesystem::path frag_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/axis.frag");
-    ret = nmutil::read_file(&frag_src.text, &frag_src.len, frag_path.u8string().c_str());
+    ret = nm::read_file(&frag_src.text, &frag_src.len, frag_path.u8string().c_str());
     if (ret != NM_SUCCESS) {
         return -1;
     }
@@ -75,7 +75,7 @@ nm_ret init_axis()
     return NM_SUCCESS;
 }
 
-void render_axis(mat4 mvp)
+void render_axis(nm::mat4 mvp)
 {
     program.use();
     glBindVertexArray(lines_vao);

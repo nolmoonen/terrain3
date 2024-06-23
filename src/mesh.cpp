@@ -65,8 +65,8 @@ uint32_t calculate_index_count(rect rect)
 }
 
 /// Calculate the range for the given rect, in grid coordinates.
-static uvec2 calculate_range(rect rect)
-{ return uvec2(rect.size_x, rect.size_z) - 1; }
+static nm::uvec2 calculate_range(rect rect)
+{ return nm::uvec2(rect.size_x, rect.size_z) - 1; }
 
 /// Triangle winding is to face positive y.
 GLushort *generate_indices(GLushort *indices, rect rect, uint32_t offset)
@@ -263,34 +263,34 @@ void setup_mesh(mesh *mesh)
     mesh->fixup_x.range = calculate_range(fixup_x);
 
     uint32_t neg_z = calculate_index_count(trim_neg_z);
-    uvec2 neg_z_range = calculate_range(trim_neg_z);
+    nm::uvec2 neg_z_range = calculate_range(trim_neg_z);
     uint32_t pos_x = calculate_index_count(trim_pos_x);
-    uvec2 pos_x_range = calculate_range(trim_pos_x);
+    nm::uvec2 pos_x_range = calculate_range(trim_pos_x);
     uint32_t pos_z = calculate_index_count(trim_pos_z);
-    uvec2 pos_z_range = calculate_range(trim_pos_z);
+    nm::uvec2 pos_z_range = calculate_range(trim_pos_z);
     uint32_t neg_x = calculate_index_count(trim_neg_x);
-    uvec2 neg_x_range = calculate_range(trim_neg_x);
+    nm::uvec2 neg_x_range = calculate_range(trim_neg_x);
     mesh->trim_neg_z_neg_x.count = neg_z + neg_x;
-    mesh->trim_neg_z_neg_x.range = maxu(neg_z_range, neg_x_range);
+    mesh->trim_neg_z_neg_x.range = nm::max(neg_z_range, neg_x_range);
     mesh->trim_pos_z_pos_x.count = pos_z + pos_x;
-    mesh->trim_pos_z_pos_x.range = maxu(pos_z_range, pos_x_range);
+    mesh->trim_pos_z_pos_x.range = nm::max(pos_z_range, pos_x_range);
     mesh->trim_pos_z_neg_x.count = pos_z + neg_x;
-    mesh->trim_pos_z_neg_x.range = maxu(pos_z_range, neg_x_range);
+    mesh->trim_pos_z_neg_x.range = nm::max(pos_z_range, neg_x_range);
     mesh->trim_neg_z_pos_x.count = neg_z + pos_x;
-    mesh->trim_neg_z_pos_x.range = maxu(neg_z_range, pos_x_range);
+    mesh->trim_neg_z_pos_x.range = nm::max(neg_z_range, pos_x_range);
 
     // 6 indices are used here per vertex.
     // Need to repeat one vertex to get correct winding when
     // connecting the triangle strips.
     uint32_t degenerate_count = ((CLIPMAP_SIZE - 1) * 2 + 1) * 6;
     mesh->degenerate_neg_x.count = degenerate_count;
-    mesh->degenerate_neg_x.range = uvec2(0, CLIPMAP_LEVEL_SIZE - 1u);
+    mesh->degenerate_neg_x.range = nm::uvec2(0, CLIPMAP_LEVEL_SIZE - 1u);
     mesh->degenerate_pos_x.count = degenerate_count;
-    mesh->degenerate_pos_x.range = uvec2(0, CLIPMAP_LEVEL_SIZE - 1u);
+    mesh->degenerate_pos_x.range = nm::uvec2(0, CLIPMAP_LEVEL_SIZE - 1u);
     mesh->degenerate_neg_z.count = degenerate_count;
-    mesh->degenerate_neg_z.range = uvec2(CLIPMAP_LEVEL_SIZE - 1u, 0);
+    mesh->degenerate_neg_z.range = nm::uvec2(CLIPMAP_LEVEL_SIZE - 1u, 0);
     mesh->degenerate_pos_z.count = degenerate_count;
-    mesh->degenerate_pos_z.range = uvec2(CLIPMAP_LEVEL_SIZE - 1u, 0);
+    mesh->degenerate_pos_z.range = nm::uvec2(CLIPMAP_LEVEL_SIZE - 1u, 0);
 
     mesh->index_count =
             mesh->quadlet.count + mesh->quad.count +

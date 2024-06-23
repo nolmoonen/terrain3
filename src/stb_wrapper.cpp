@@ -18,7 +18,7 @@ unsigned char *load_img(
 {
     unsigned char *data = stbi_load(filename, x, y, comp, req_comp);
     if (!data) {
-        nmutil::log(nmutil::LOG_WARN, "could not load texture %s\n", filename);
+        nm::log(nm::LOG_WARN, "could not load texture %s\n", filename);
 
         return nullptr;
     }

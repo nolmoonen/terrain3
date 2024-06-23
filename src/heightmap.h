@@ -28,12 +28,12 @@ struct level_info {
 /// on where to update it in the texture.
 struct update_info {
     /// Local texel coordinate of (-x/-y)-most point of region.
-    ivec2 tex;
+    nm::ivec2 tex;
     // todo should this not be unsigned?
     /// Size in texels of the region.
-    ivec2 size;
+    nm::ivec2 size;
     /// World texel coordinate of (-x/-y)-most point of region.
-    ivec2 start;
+    nm::ivec2 start;
     /// Level of the texture.
     uint32_t level;
     float padding0;
@@ -41,11 +41,11 @@ struct update_info {
 
 struct heightmap {
     /// Texture containing the heightmap and normal.
-    nmutil::tex texture;
+    nm::tex texture;
     GLuint uniform_buffer;
     size_t uniform_buffer_size;
 
-    nmutil::tex noise_tex;
+    nm::tex noise_tex;
 
     /// One level info for each level.
     level_info level_infos[CLIPMAP_LEVEL_COUNT];
@@ -61,10 +61,10 @@ nm_ret init(heightmap *hm);
 
 void cleanup(heightmap *hm);
 
-void update(heightmap *hm, ivec2 level_offsets[CLIPMAP_LEVEL_COUNT]);
+void update(heightmap *hm, nm::ivec2 level_offsets[CLIPMAP_LEVEL_COUNT]);
 
 /// Returns a height in [0,1] of a world-space position.
-vec3 get_height(heightmap *hm, vec2 pos);
+nm::fvec3 get_height(heightmap *hm, nm::fvec2 pos);
 
 /// Encapsulation for applying the heightmap texture.
 void use_texture(heightmap *hm);

@@ -25,20 +25,23 @@ struct geometry {
     draw_info draw_infos[BLOCK_COUNT];
 
     /// (-x,-z)-most point of the level's mesh in grid coordinates.
-    ivec2 level_offsets[CLIPMAP_LEVEL_COUNT];
+    nm::ivec2 level_offsets[CLIPMAP_LEVEL_COUNT];
 
-    frustum frustum;
+    nm::frustum frustum;
+
+    GLint gl_ubo_alignment;
+    GLint gl_max_compute_work_group_count[3];
 };
 
 /// Operates on a grid coordinate.
-typedef bool (*trim_cond)(const ivec2 &offset);
+typedef bool (*trim_cond)(const nm::ivec2 &offset);
 
 void init(geometry *g);
 
 void cleanup(geometry *g);
 
 /// Sets the offset of each level, based on the camera position.
-void update_level_offsets(geometry *g, const vec2 &camera_pos);
+void update_level_offsets(geometry *g, const nm::fvec2 &camera_pos);
 
 /// Updates the draw list, which maintains which parts of the mesh are drawn
 /// and where.

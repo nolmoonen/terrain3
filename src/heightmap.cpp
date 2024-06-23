@@ -11,7 +11,7 @@
 #include "app.h"
 
 /// The compute shader program.
-nmutil::shader_program comp_program;
+nm::shader_program comp_program;
 
 nm_ret init(heightmap *hm)
 {
@@ -50,16 +50,16 @@ nm_ret init(heightmap *hm)
     GL_CHECK(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 
     // compute shader
-    nmutil::res_t comp_src;
+    nm::res_t comp_src;
     const std::filesystem::path comp_path = TERRAIN3_RESOURCE_DIR / std::filesystem::path("shader/lod.comp");
-    nm_ret ret = nmutil::read_file(&comp_src.text, &comp_src.len, comp_path.u8string().c_str());
+    nm_ret ret = nm::read_file(&comp_src.text, &comp_src.len, comp_path.u8string().c_str());
     if (ret != NM_SUCCESS) return NM_FAIL;
 
-    nmutil::shader comp_shader;
+    nm::shader comp_shader;
     ret = comp_shader.init(
             comp_src.text, comp_src.len, GL_COMPUTE_SHADER);
     if (ret != NM_SUCCESS) {
-        nmutil::log(nmutil::LOG_ERROR, "compute shader failed\n");
+        nm::log(nm::LOG_ERROR, "compute shader failed\n");
         return NM_FAIL;
     }
 
@@ -125,14 +125,14 @@ void cleanup(heightmap *hm)
     hm->texture.cleanup();
 }
 
-vec3 get_height(heightmap *hm, vec2 pos)
+nm::fvec3 get_height(heightmap *hm, nm::fvec2 pos)
 {
     // returns in [0,1]
-    vec3 t = terrain_noise(TERRAIN_SCA * pos, hm->noise, NOISE_SIZE);
+    nm::fvec3 t = terrain_noise(TERRAIN_SCA * pos, hm->noise, NOISE_SIZE);
     float height = TERRAIN_AMP * t.x;
-    vec2 grad = TERRAIN_AMP * TERRAIN_SCA * vec2(t.y, t.z);
+    nm::fvec2 grad = TERRAIN_AMP * TERRAIN_SCA * nm::fvec2(t.y, t.z);
 
-    return vec3(height, grad);
+    return nm::fvec3(height, grad.x, grad.y);
 }
 
 /// Register that the following region must be updated:
@@ -147,9 +147,9 @@ void register_update_region(
     if (size_x == 0 || size_y == 0) return;
 
     update_info info;
-    info.tex = ivec2(tex_x, tex_y);
-    info.size = ivec2(size_x, size_y);
-    info.start = ivec2(start_x, start_y);
+    info.tex = nm::ivec2(tex_x, tex_y);
+    info.size = nm::ivec2(size_x, size_y);
+    info.start = nm::ivec2(start_x, start_y);
     info.level = level;
 
     infos[(*info_index)++] = info;
@@ -158,7 +158,7 @@ void register_update_region(
 /// Find out what parts of this level's texture need to be updated.
 /// Changes array of update info structs and index to next.
 void update_level(
-        heightmap *hm, ivec2 offset, uint32_t level, update_info *u_infos,
+        heightmap *hm, nm::ivec2 offset, uint32_t level, update_info *u_infos,
         uint32_t *info_index)
 {
     level_info *info = &hm->level_infos[level];
@@ -174,11 +174,11 @@ void update_level(
     int32_t delta_y = start_y - info->y;
 
     // old (local) texture origin
-    int32_t old_base_x = idiv(info->x, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
-    int32_t old_base_y = idiv(info->y, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
+    int32_t old_base_x = nm::idiv(info->x, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
+    int32_t old_base_y = nm::idiv(info->y, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
     // new (local) texture origin
-    int32_t base_x = idiv(start_x, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
-    int32_t base_y = idiv(start_y, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
+    int32_t base_x = nm::idiv(start_x, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
+    int32_t base_y = nm::idiv(start_y, CLIPMAP_LEVEL_SIZE) * CLIPMAP_LEVEL_SIZE;
 
     // check if we must compute the complete texture or just parts of it
     if (abs(delta_x) >= int32_t(CLIPMAP_LEVEL_SIZE) ||
@@ -369,7 +369,7 @@ void update_level(
     info->y = start_y;
 }
 
-void update(heightmap *hm, ivec2 level_offsets[CLIPMAP_LEVEL_COUNT])
+void update(heightmap *hm, nm::ivec2 level_offsets[CLIPMAP_LEVEL_COUNT])
 {
     // map buffer to gpu
     GL_CHECK(glBindBuffer(GL_UNIFORM_BUFFER, hm->uniform_buffer));

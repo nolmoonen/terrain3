@@ -1,17 +1,19 @@
 #ifndef TERRAIN3_MESH_H
 #define TERRAIN3_MESH_H
 
+#include "nmutil/vector.h"
+
+#include <glad/gl.h>
+
 #include <cstdint>
 #include <vector>
-#include <glad/gl.h>
-#include "nmutil/vector.h"
 
 /// This file and its implementation encapsulate the generation and rendering
 /// of several vertex mesh "blocks" of which the clipmap mesh exists.
 
 struct instance_data {
     /// Grid-space offset of the mesh in the x/z-plane: (-x,-z)-most point.
-    ivec2 offset;
+    nm::ivec2 offset;
     /// Clipmap LOD level of block.
     uint32_t level;
     /// Debug information.
@@ -41,7 +43,7 @@ struct block {
     size_t count;
     /// Range in grid cells covered by this block, in grid coordinates.
     /// Used for frustum culling.
-    uvec2 range;
+    nm::uvec2 range;
 };
 
 /// Handles the mesh associated with the terrain.
