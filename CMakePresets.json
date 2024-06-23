@@ -1,0 +1,33 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "win",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/debug",
+      "hidden": true
+    },
+    {
+      "inherits": "win",
+      "name": "win-debug",
+      "binaryDir": "${sourceDir}/build/debug"
+    },
+    {
+      "inherits": "win",
+      "name": "win-relwithdebinfo",
+      "binaryDir": "${sourceDir}/build/relwithdebinfo"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win-debug",
+      "configurePreset": "win-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "win-relwithdebinfo",
+      "configurePreset": "win-relwithdebinfo",
+      "configuration": "RelWithDebInfo"
+    }
+  ]
+}

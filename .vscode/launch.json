@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "win",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\debug\\Debug\\terrain3.exe",
+            "cwd": "${workspaceFolder}\\build\\debug\\Debug"
+        }
+    ]
+}
