@@ -5,18 +5,18 @@
 #include "defs.h"
 #include "log.h"
 
-namespace nmutil {
+namespace nm {
     int read_file(char **buffer, size_t *size, const char *file_name);
 }
 
-inline nm_ret nmutil::read_file(
+inline nm_ret nm::read_file(
         char **buffer, size_t *size, const char *file_name)
 {
     FILE *file;
 
     errno_t err = fopen_s(&file, file_name, "rb");
     if (!file || err) {
-        log(LOG_ERROR, "failed to open file \"%s\"\n", file_name);
+        nm::log(nm::LOG_ERROR, "failed to open file \"%s\"\n", file_name);
 
         return NM_FAIL;
     }
@@ -27,7 +27,7 @@ inline nm_ret nmutil::read_file(
 
     *buffer = new char[*size + 1]; // +1 for null terminator
     if (!(*buffer)) {
-        log(LOG_ERROR, "failed to allocate %d bytes\n", *size);
+        nm::log(nm::LOG_ERROR, "failed to allocate %d bytes\n", *size);
         fclose(file);
 
         return NM_FAIL;
@@ -37,7 +37,7 @@ inline nm_ret nmutil::read_file(
     fclose(file);
 
     if (read_size != *size) {
-        log(LOG_ERROR, "failed to read all bytes in file\n", *size);
+        nm::log(nm::LOG_ERROR, "failed to read all bytes in file\n", *size);
 
         return NM_FAIL;
     }

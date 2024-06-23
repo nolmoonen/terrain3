@@ -8,7 +8,7 @@
 nm_ret init_axis();
 
 /// Only call this after init_axis().
-void render_axis(mat4 mvp);
+void render_axis(nm::mat4 mvp);
 
 /// Only call this once, after init_axis().
 void cleanup_axis();

@@ -1,464 +1,460 @@
 #ifndef NMUTIL_VECTOR_H
 #define NMUTIL_VECTOR_H
 
+#include "config.h"
+#include "defs.h"
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include "math.h"
 
-struct uvec2;
+namespace nm {
 
-struct ivec2;
-
+template <typename T>
 struct vec2 {
-    float x, y;
+    T x, y;
 
     vec2() = default;
 
-    explicit vec2(float a);
+    NM_SPECIFIERS explicit vec2(T s) : x(s), y(s) {}
 
-    vec2(float x, float y);
+    NM_SPECIFIERS constexpr vec2(T x, T y) : x(x), y(y) {}
 
-    explicit vec2(uvec2 v);
+    template <typename S>
+    NM_SPECIFIERS constexpr explicit vec2(const vec2<S> &v)
+        : x(static_cast<T>(v.x)), y(static_cast<T>(v.y))
+    {
+    }
 
-    explicit vec2(ivec2 v);
+    NM_SPECIFIERS vec2 &operator+=(const vec2 &v)
+    {
+        x += v.x;
+        y += v.y;
+        return *this;
+    }
 
-    vec2 operator+(float a) const;
+    NM_SPECIFIERS vec2 &operator+=(T s) { return *this += vec2(s); }
 
-    vec2 operator+(vec2 v) const;
+    NM_SPECIFIERS vec2 &operator-=(const vec2 &v)
+    {
+        x -= v.x;
+        y -= v.y;
+        return *this;
+    }
 
-    void operator+=(vec2 v);
+    NM_SPECIFIERS vec2 &operator-=(T s) { return *this -= vec2(s); }
 
-    friend vec2 operator+(float a, const vec2 &v);
+    NM_SPECIFIERS vec2 &operator*=(const vec2 &v)
+    {
+        x *= v.x;
+        y *= v.y;
+        return *this;
+    }
 
-    vec2 operator-(float a) const;
+    NM_SPECIFIERS vec2 &operator*=(T s) { return *this *= vec2(s); }
 
-    vec2 operator-(vec2 v) const;
+    NM_SPECIFIERS vec2 &operator/=(const vec2 &v)
+    {
+        x /= v.x;
+        y /= v.y;
+        return *this;
+    }
 
-    friend vec2 operator-(float a, const vec2 &v);
+    NM_SPECIFIERS vec2 &operator/=(T s) { return *this /= vec2(s); }
 
-    vec2 operator*(float a) const;
+    NM_SPECIFIERS vec2 operator-() { return vec2(-x, -y); }
 
-    vec2 operator*(vec2 v) const;
+    NM_SPECIFIERS friend vec2 operator+(vec2 lhs, const vec2 &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
 
-    void operator*=(float a);
+    NM_SPECIFIERS friend vec2 operator+(vec2 lhs, const T &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
 
-    void operator*=(vec2 v);
+    NM_SPECIFIERS friend vec2 operator+(const T &lhs, vec2 rhs)
+    {
+        vec2 ret(lhs);
+        ret += rhs;
+        return ret;
+    }
 
-    friend vec2 operator*(float a, const vec2 &v);
+    NM_SPECIFIERS friend vec2 operator-(vec2 lhs, const vec2 &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
 
-    vec2 operator/(float a) const;
+    NM_SPECIFIERS friend vec2 operator-(vec2 lhs, const T &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
 
-    vec2 operator/(vec2 v) const;
+    NM_SPECIFIERS friend vec2 operator-(const T &lhs, vec2 rhs)
+    {
+        vec2 ret(lhs);
+        ret -= rhs;
+        return ret;
+    }
+
+    NM_SPECIFIERS friend vec2 operator*(vec2 lhs, const vec2 &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec2 operator*(vec2 lhs, const T &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec2 operator*(const T &lhs, vec2 rhs)
+    {
+        vec2 ret(lhs);
+        ret *= rhs;
+        return ret;
+    }
+
+    NM_SPECIFIERS friend vec2 operator/(vec2 lhs, const vec2 &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec2 operator/(vec2 lhs, const T &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec2 operator/(const T &lhs, vec2 rhs)
+    {
+        vec2 ret(lhs);
+        ret /= rhs;
+        return ret;
+    }
+
+    NM_SPECIFIERS friend bool operator==(const vec2 &lhs, const vec2 &rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y;
+    }
+
+    NM_SPECIFIERS friend bool operator!=(const vec2 &lhs, const vec2 &rhs) { return !(lhs == rhs); }
 };
 
-inline vec2::vec2(float a) : x(a), y(a)
-{}
+typedef vec2<f32> fvec2;
+typedef vec2<f64> dvec2;
+typedef vec2<i32> ivec2;
+typedef vec2<u32> uvec2;
 
-inline vec2::vec2(float x, float y) : x(x), y(y)
-{}
+NM_SPECIFIERS inline ivec2 toivec2(const uvec2 &v) { return {i32(v.x), i32(v.y)}; }
+NM_SPECIFIERS inline ivec2 toivec2(const fvec2 &v) { return {i32(v.x), i32(v.y)}; }
 
-inline vec2 vec2::operator+(float a) const
-{ return vec2(x + a, y + a); }
+NM_SPECIFIERS inline uvec2 touvec2(const ivec2 &v) { return {u32(v.x), u32(v.y)}; }
 
-inline vec2 vec2::operator+(vec2 v) const
-{ return vec2(x + v.x, y + v.y); }
+NM_SPECIFIERS inline fvec2 tofvec2(const ivec2 &v) { return {f32(v.x), f32(v.y)}; }
 
-inline void vec2::operator+=(vec2 v)
+NM_SPECIFIERS inline ivec2 operator&(ivec2 lhs, const i32 &rhs)
 {
-    x += v.x;
-    y += v.y;
+    return {lhs.x & rhs, lhs.y & rhs};
 }
 
-inline vec2 operator+(float a, const vec2 &v)
-{ return vec2(a + v.x, a + v.y); }
-
-inline vec2 vec2::operator-(float a) const
-{ return vec2(x - a, y - a); }
-
-inline vec2 vec2::operator-(vec2 v) const
-{ return vec2(x - v.x, y - v.y); }
-
-inline vec2 operator-(float a, const vec2 &v)
-{ return vec2(a - v.x, a - v.y); }
-
-inline vec2 vec2::operator*(float a) const
-{ return vec2(x * a, y * a); }
-
-inline vec2 vec2::operator*(vec2 v) const
-{ return vec2(x * v.x, y * v.y); }
-
-inline void vec2::operator*=(float a)
-{
-    x *= a;
-    y *= a;
-}
-
-inline void vec2::operator*=(vec2 v)
-{
-    x *= v.x;
-    y *= v.y;
-}
-
-inline vec2 operator*(float a, const vec2 &v)
-{ return vec2(a * v.x, a * v.y); }
-
-inline vec2 vec2::operator/(float a) const
-{ return vec2(x / a, y / a); }
-
-inline vec2 vec2::operator/(vec2 v) const
-{ return vec2(x / v.x, y / v.y); }
-
-/** vec2 non-member */
-
-inline vec2 normalize(vec2 a)
-{
-    float len = sqrtf(a.x * a.x + a.y * a.y);
-    return vec2(a.x / len, a.y / len);
-}
-
-inline vec2 floorf(vec2 v)
-{ return vec2(floorf(v.x), floorf(v.y)); }
-
-inline vec2 fractf(vec2 v)
-{ return v - floorf(v); }
-
-inline float dot(vec2 a, vec2 b)
-{ return a.x * b.x + a.y * b.y; }
-
-struct ivec2 {
-    int32_t x, y;
-
-    ivec2() = default;
-
-    ivec2(int32_t a);
-
-    ivec2(int32_t x, int32_t y);
-
-    explicit ivec2(vec2 v);
-
-    ivec2 operator+(ivec2 v) const;
-
-    void operator+=(ivec2 v);
-
-    ivec2 operator-(ivec2 v) const;
-
-    ivec2 operator*(int32_t a) const;
-
-    ivec2 operator/(int32_t a) const;
-
-    ivec2 operator&(int32_t a) const;
-};
-
-inline ivec2::ivec2(int32_t a) : x(a), y(a)
-{}
-
-inline ivec2::ivec2(int32_t x, int32_t y) : x(x), y(y)
-{}
-
-inline ivec2::ivec2(vec2 v) : x(int32_t(v.x)), y(int32_t(v.y))
-{}
-
-inline ivec2 ivec2::operator+(ivec2 v) const
-{ return ivec2(x + v.x, y + v.y); }
-
-inline void ivec2::operator+=(ivec2 v)
-{
-    x += v.x;
-    y += v.y;
-}
-
-inline ivec2 ivec2::operator-(ivec2 v) const
-{ return ivec2(x - v.x, y - v.y); }
-
-inline ivec2 ivec2::operator*(int32_t a) const
-{ return ivec2(x * a, y * a); }
-
-inline ivec2 ivec2::operator/(int32_t a) const
-{ return ivec2(x / a, y / a); }
-
-inline ivec2 ivec2::operator&(int32_t a) const
-{ return ivec2(x & a, y & a); }
-
-/** vec2 constructor, must be after ivec2 definition */
-
-inline vec2::vec2(ivec2 v) : x(float(v.x)), y(float(v.y))
-{}
-
-struct uvec2 {
-    uint32_t x, y;
-
-    uvec2() = default;
-
-    uvec2(uint32_t x, uint32_t y);
-
-    explicit uvec2(vec2 v);
-
-    uvec2 operator+(uvec2 v) const;
-
-    uvec2 operator-(uint32_t a) const;
-
-    uvec2 operator-(uvec2 v) const;
-
-    uvec2 operator&(uint32_t a) const;
-};
-
-inline uvec2::uvec2(uint32_t x, uint32_t y) : x(x), y(y)
-{}
-
-inline uvec2::uvec2(vec2 v) : x(uint32_t(v.x)), y(uint32_t(v.y))
-{}
-
-inline uvec2 uvec2::operator+(uvec2 v) const
-{ return uvec2(x + v.x, y + v.y); }
-
-inline uvec2 uvec2::operator-(uint32_t a) const
-{ return uvec2(x - a, y - a); }
-
-inline uvec2 uvec2::operator-(uvec2 v) const
-{ return uvec2(x - v.x, y - v.y); }
-
-inline uvec2 uvec2::operator&(uint32_t a) const
-{ return uvec2(x & a, y & a); }
-
-/** vec2 constructor, must be after uvec2 definition */
-
-inline vec2::vec2(uvec2 v) : x(float(v.x)), y(float(v.y))
-{}
-
-/** uvec2 non-member */
-
-inline uvec2 maxu(uvec2 a, uvec2 b)
-{ return uvec2(maxu(a.x, b.x), maxu(a.y, b.y)); }
-
+template <typename T>
 struct vec3 {
-    float x, y, z;
+    T x, y, z;
 
     vec3() = default;
 
-    vec3(vec3 const &v);
+    template <typename S>
+    NM_SPECIFIERS constexpr explicit vec3(vec3<S> const &v)
+        : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z))
+    {
+    }
 
-    explicit vec3(float a);
+    NM_SPECIFIERS constexpr explicit vec3(T s) : x(s), y(s), z(s) {}
 
-    vec3(float x, float y, float z);
+    NM_SPECIFIERS constexpr vec3(T x, T y, T z) : x(x), y(y), z(z) {}
 
-    vec3(float x, vec2 yz);
+    NM_SPECIFIERS static constexpr vec3 X() { return {1, 0, 0}; };
 
-    static vec3 X();
+    NM_SPECIFIERS static constexpr vec3 Y() { return {0, 1, 0}; };
 
-    static vec3 Y();
+    NM_SPECIFIERS static constexpr vec3 Z() { return {0, 0, 1}; };
 
-    static vec3 Z();
+    NM_SPECIFIERS static constexpr vec3 zero() { return {0, 0, 0}; };
 
-    vec3 operator+(float a) const;
+    NM_SPECIFIERS constexpr vec3 &operator+=(const vec3 &v)
+    {
+        x += v.x;
+        y += v.y;
+        z += v.z;
+        return *this;
+    }
 
-    vec3 operator+(vec3 v) const;
+    NM_SPECIFIERS vec3 &operator+=(T s) { return *this += vec3(s); }
 
-    void operator+=(vec3 v);
+    NM_SPECIFIERS constexpr vec3 &operator-=(const vec3 &v)
+    {
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
+        return *this;
+    }
 
-    friend vec3 operator+(float a, const vec3 &v);
+    NM_SPECIFIERS vec3 &operator-=(T s) { return *this -= vec3(s); }
 
-    vec3 operator-(float a) const;
+    NM_SPECIFIERS constexpr vec3 &operator*=(const vec3 &v)
+    {
+        x *= v.x;
+        y *= v.y;
+        z *= v.z;
+        return *this;
+    }
 
-    vec3 operator-(vec3 v) const;
+    NM_SPECIFIERS constexpr vec3 &operator*=(T s) { return *this *= vec3(s); }
 
-    void operator-=(vec3 v);
+    NM_SPECIFIERS constexpr vec3 &operator/=(const vec3 &v)
+    {
+        x /= v.x;
+        y /= v.y;
+        z /= v.z;
+        return *this;
+    }
 
-    friend vec3 operator-(float a, const vec3 &v);
+    NM_SPECIFIERS constexpr vec3 &operator/=(T s) { return *this /= vec3(s); }
 
-    vec3 operator*(float a) const;
+    NM_SPECIFIERS vec3 operator+() const { return vec3(x, y, z); }
 
-    void operator*=(float a);
+    NM_SPECIFIERS vec3 operator-() const { return vec3(-x, -y, -z); }
 
-    vec3 operator*(vec3 v) const;
+    NM_SPECIFIERS constexpr friend vec3 operator+(vec3 lhs, const vec3 &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
 
-    friend vec3 operator*(float a, const vec3 &v);
+    NM_SPECIFIERS friend vec3 operator+(vec3 lhs, const T &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
 
-    vec3 operator/(float a) const;
+    NM_SPECIFIERS constexpr friend vec3 operator-(vec3 lhs, const vec3 &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec3 operator-(vec3 lhs, const T &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    // TODO: ambiguous
+    NM_SPECIFIERS friend vec3 operator*(vec3 lhs, const vec3 &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS constexpr friend vec3 operator*(vec3 lhs, const T &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS constexpr friend vec3 operator*(T lhs, const vec3 &rhs)
+    {
+        return vec3(lhs) *= rhs;
+    }
+
+    NM_SPECIFIERS constexpr friend vec3 operator/(vec3 lhs, const vec3 &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec3 operator/(vec3 lhs, const T &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend bool operator==(const vec3 &lhs, const vec3 &rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+    }
+
+    NM_SPECIFIERS friend bool operator!=(const vec3 &lhs, const vec3 &rhs) { return !(lhs == rhs); }
 };
 
-inline vec3::vec3(vec3 const &v) : x(v.x), y(v.y), z(v.z)
-{}
+typedef vec3<f32> fvec3;
+typedef vec3<f64> dvec3;
+typedef vec3<i32> ivec3;
+typedef vec3<u32> uvec3;
 
-inline vec3::vec3(float a) : x(a), y(a), z(a)
-{}
-
-inline vec3::vec3(float x, float y, float z) : x(x), y(y), z(z)
-{}
-
-inline vec3::vec3(float x, vec2 yz) : x(x), y(yz.x), z(yz.y)
-{}
-
-inline vec3 vec3::X()
-{ return vec3(1.f, 0.f, 0.f); }
-
-inline vec3 vec3::Y()
-{ return vec3(0.f, 1.f, 0.f); }
-
-inline vec3 vec3::Z()
-{ return vec3(0.f, 0.f, 1.f); }
-
-inline vec3 vec3::operator+(float a) const
-{ return vec3(x + a, y + a, z + a); }
-
-inline vec3 vec3::operator+(vec3 v) const
-{ return vec3(x + v.x, y + v.y, z + v.z); }
-
-inline void vec3::operator+=(vec3 v)
+NM_SPECIFIERS inline ivec3 operator%(ivec3 lhs, const i32 &rhs)
 {
-    x += v.x;
-    y += v.y;
-    z += v.z;
+    return {lhs.x % rhs, lhs.y % rhs, lhs.z % rhs};
 }
 
-inline vec3 operator+(float a, const vec3 &v)
-{ return vec3(a + v.x, a + v.y, a + v.z); }
-
-inline vec3 vec3::operator-(float a) const
-{ return vec3(x - a, y - a, z - a); }
-
-inline vec3 vec3::operator-(vec3 v) const
-{ return vec3(x - v.x, y - v.y, z - v.z); }
-
-inline void vec3::operator-=(vec3 v)
+NM_SPECIFIERS inline uvec3 operator%(uvec3 lhs, const u32 &rhs)
 {
-    x -= v.x;
-    y -= v.y;
-    z -= v.z;
+    return {lhs.x % rhs, lhs.y % rhs, lhs.z % rhs};
 }
 
-inline vec3 operator-(float a, const vec3 &v)
-{ return vec3(a - v.x, a - v.y, a - v.z); }
-
-inline vec3 vec3::operator*(float a) const
-{ return vec3(x * a, y * a, z * a); }
-
-inline void vec3::operator*=(float a)
+NM_SPECIFIERS inline uvec3 operator&(uvec3 lhs, const u32 &rhs)
 {
-    x *= a;
-    y *= a;
-    z *= a;
+    return {lhs.x & rhs, lhs.y & rhs, lhs.z & rhs};
 }
 
-inline vec3 vec3::operator*(vec3 v) const
-{ return vec3(x * v.x, y * v.y, z * v.z); }
-
-inline vec3 operator*(float a, const vec3 &v)
-{ return vec3(a * v.x, a * v.y, a * v.z); }
-
-inline vec3 vec3::operator/(float a) const
-{ return vec3(x / a, y / a, z / a); }
-
-/** vec3 non-member */
-
-inline vec3 floorf(vec3 v)
-{ return vec3(floorf(v.x), floorf(v.y), floorf(v.z)); }
-
-inline vec3 fractf(vec3 v)
-{ return v - floorf(v); }
-
-inline vec3 cross(vec3 a, vec3 b)
-{
-    return vec3(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x);
-}
-
-inline float dot(vec3 a, vec3 b)
-{ return a.x * b.x + a.y * b.y + a.z * b.z; }
-
-inline vec3 normalize(vec3 a)
-{
-    float len = sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
-    return vec3(a.x / len, a.y / len, a.z / len);
-}
-
-inline vec3 fminf(vec3 a, vec3 b)
-{ return vec3(fminf(a.x, b.x), fminf(a.y, b.y), fminf(a.z, b.z)); }
-
-inline vec3 fmaxf(vec3 a, vec3 b)
-{ return vec3(fmaxf(a.x, b.x), fmaxf(a.y, b.y), fmaxf(a.z, b.z)); }
-
+template <typename T>
 struct vec4 {
-    float x, y, z, w;
+    T x, y, z, w;
 
     vec4() = default;
 
-    explicit vec4(float a);
+    NM_SPECIFIERS vec4(vec4 const &v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
 
-    vec4(float x, float y, float z, float w);
+    NM_SPECIFIERS vec4(vec3<T> const &v, T w) : x(v.x), y(v.y), z(v.z), w(w) {}
 
-    vec4(float x, vec3 yzw);
+    NM_SPECIFIERS explicit vec4(T s) : x(s), y(s), z(s), w(s) {}
 
-    vec4(vec2 xy, vec2 zw);
+    NM_SPECIFIERS vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
-    vec4(vec3 xyz, float w);
+    NM_SPECIFIERS vec4 &operator+=(const vec4 &v)
+    {
+        x += v.x;
+        y += v.y;
+        z += v.z;
+        w += v.w;
+        return *this;
+    }
 
-    vec4 operator+(vec4 v) const;
+    NM_SPECIFIERS vec4 &operator+=(T s) { return *this += vec4(s); }
 
-    void operator+=(vec4 v);
+    NM_SPECIFIERS vec4 &operator-=(const vec4 &v)
+    {
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
+        w -= v.w;
+        return *this;
+    }
 
-    vec4 operator-() const;
+    NM_SPECIFIERS vec4 &operator-=(T s) { return *this -= vec4(s); }
 
-    vec4 operator-(vec4 v) const;
+    NM_SPECIFIERS vec4 &operator*=(const vec4 &v)
+    {
+        x *= v.x;
+        y *= v.y;
+        z *= v.z;
+        w *= v.w;
+        return *this;
+    }
 
-    friend vec4 operator*(const vec4 &v, float a);
+    NM_SPECIFIERS vec4 &operator*=(T s) { return *this *= vec4(s); }
 
-    friend vec4 operator*(float a, const vec4 &v);
+    NM_SPECIFIERS vec4 &operator/=(const vec4 &v)
+    {
+        x /= v.x;
+        y /= v.y;
+        z /= v.z;
+        w /= v.w;
+        return *this;
+    }
 
-    void operator*=(float a);
+    NM_SPECIFIERS vec4 &operator/=(T s) { return *this /= vec4(s); }
+
+    NM_SPECIFIERS vec4 operator-() { return vec4(-x, -y, -z, -w); }
+
+    NM_SPECIFIERS friend vec4 operator+(vec4 lhs, const vec4 &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator+(vec4 lhs, const T &rhs)
+    {
+        lhs += rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator-(vec4 lhs, const vec4 &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator-(vec4 lhs, const T &rhs)
+    {
+        lhs -= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator*(vec4 lhs, const vec4 &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator*(vec4 lhs, const T &rhs)
+    {
+        lhs *= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator/(vec4 lhs, const vec4 &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend vec4 operator/(vec4 lhs, const T &rhs)
+    {
+        lhs /= rhs;
+        return lhs;
+    }
+
+    NM_SPECIFIERS friend bool operator==(const vec4 &lhs, const vec4 &rhs)
+    {
+        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
+    }
+
+    NM_SPECIFIERS friend bool operator!=(const vec4 &lhs, const vec4 &rhs) { return !(lhs == rhs); }
 };
 
-inline vec4::vec4(float a) : x(a), y(a), z(a), w(a)
-{}
+typedef vec4<f32> fvec4;
+typedef vec4<f64> dvec4;
+typedef vec4<i32> ivec4;
+typedef vec4<u32> uvec4;
 
-inline vec4::vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w)
-{}
-
-inline vec4::vec4(float x, vec3 yzw) : x(x), y(yzw.x), z(yzw.y), w(yzw.z)
-{}
-
-inline vec4::vec4(vec2 xy, vec2 zw) : x(xy.x), y(xy.y), z(zw.x), w(zw.y)
-{}
-
-inline vec4::vec4(vec3 xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w)
-{}
-
-inline vec4 vec4::operator+(vec4 v) const
-{ return vec4(x + v.x, y + v.y, z + v.z, w + v.w); }
-
-inline void vec4::operator+=(vec4 v)
+NM_SPECIFIERS inline ivec4 toivec4(const uvec4 &v)
 {
-    x += v.x;
-    y += v.y;
-    z += v.z;
-    w += v.w;
+    return {i32(v.x), i32(v.y), i32(v.z), i32(v.w)};
+}
+NM_SPECIFIERS inline ivec4 toivec4(const fvec4 &v)
+{
+    return {i32(v.x), i32(v.y), i32(v.z), i32(v.w)};
 }
 
-inline vec4 vec4::operator-() const
-{ return vec4(-x, -y, -z, -w); }
-
-inline vec4 vec4::operator-(vec4 v) const
-{ return vec4(x - v.x, y - v.y, z - v.z, w - v.w); }
-
-inline vec4 operator*(const vec4 &v, float a)
-{ return vec4(v.x * a, v.y * a, v.z * a, v.w * a); }
-
-inline vec4 operator*(float a, const vec4 &v)
-{ return vec4(a * v.x, a * v.y, a * v.z, a * v.w); }
-
-inline void vec4::operator*=(float a)
+NM_SPECIFIERS inline uvec4 touvec4(const ivec4 &v)
 {
-    x *= a;
-    y *= a;
-    z *= a;
-    w *= a;
+    return {u32(v.x), u32(v.y), u32(v.z), u32(v.w)};
 }
 
-/** vec4 non-member */
+NM_SPECIFIERS inline fvec4 tofvec4(const ivec4 &v)
+{
+    return {f32(v.x), f32(v.y), f32(v.z), f32(v.w)};
+}
 
-inline float dot(vec4 a, vec4 b)
-{ return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
+} // namespace nm
 
 #endif // NMUTIL_VECTOR_H

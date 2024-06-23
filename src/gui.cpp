@@ -1,16 +1,15 @@
 #include <chrono>
 #include "gui.h"
 #include "imgui.h"
-#include "imgui_impl_win32.h"
+#include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "win.h"
 
-void gui_init()
+void gui_init(window* w)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
-    ImGui_ImplWin32_Init(get_hwnd());
+    ImGui_ImplGlfw_InitForOpenGL((GLFWwindow *) get_handle(w), true);
     // todo connect this to the GL loading code somehow?
     ImGui_ImplOpenGL3_Init("#version 430");
 
@@ -25,14 +24,14 @@ void gui_init()
 void gui_cleanup()
 {
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplWin32_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
 void begin_frame_imgui()
 {
     ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplWin32_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
@@ -97,7 +96,7 @@ void display_stats(
     ++total_subframe_count;
 }
 
-void display_pos(vec3 pos)
+void display_pos(nm::fvec3 pos)
 {
     static char displayed_text[128];
 

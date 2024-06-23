@@ -4,14 +4,16 @@
 #include "vector.h"
 #include "matrix.h"
 
+namespace nm {
+
 struct aabb {
-    vec3 min;
-    vec3 max;
+    fvec3 min;
+    fvec3 max;
 };
 
 struct frustum {
     /// ax + by + cz + d = 0, normal pointing outward
-    vec4 planes[6];
+    fvec4 planes[6];
 //    /// points of the frustum
 //    vec3 points[8];
 };
@@ -20,10 +22,10 @@ struct frustum {
 inline void construct_frustum(frustum *f, mat4 vp)
 {
     // matrix row
-    vec4 m0(vp[0], vp[1], vp[2], vp[3]);
-    vec4 m1(vp[4], vp[5], vp[6], vp[7]);
-    vec4 m2(vp[8], vp[9], vp[10], vp[11]);
-    vec4 m3(vp[12], vp[13], vp[14], vp[15]);
+    fvec4 m0(vp[0], vp[1], vp[2], vp[3]);
+    fvec4 m1(vp[4], vp[5], vp[6], vp[7]);
+    fvec4 m2(vp[8], vp[9], vp[10], vp[11]);
+    fvec4 m3(vp[12], vp[13], vp[14], vp[15]);
 
     f->planes[0] = -(m3 + m0); // left
     f->planes[1] = -(m3 - m0); // right
@@ -40,28 +42,28 @@ inline bool intersect(frustum *f, aabb *bb)
     // check if the box is inside or outside of the frustum
     for (uint32_t i = 0; i < 6; i++) {
         uint32_t out = 0; // number of points outside
-        if (dot(f->planes[i], vec4(bb->min.x, bb->min.y, bb->min.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->min.x, bb->min.y, bb->min.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->max.x, bb->min.y, bb->min.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->max.x, bb->min.y, bb->min.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->min.x, bb->max.y, bb->min.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->min.x, bb->max.y, bb->min.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->max.x, bb->max.y, bb->min.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->max.x, bb->max.y, bb->min.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->min.x, bb->min.y, bb->max.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->min.x, bb->min.y, bb->max.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->max.x, bb->min.y, bb->max.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->max.x, bb->min.y, bb->max.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->min.x, bb->max.y, bb->max.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->min.x, bb->max.y, bb->max.z, 1.)) > 0.) {
             out++;
         }
-        if (dot(f->planes[i], vec4(bb->max.x, bb->max.y, bb->max.z, 1.)) > 0.) {
+        if (dot(f->planes[i], fvec4(bb->max.x, bb->max.y, bb->max.z, 1.)) > 0.) {
             out++;
         }
 
@@ -95,6 +97,8 @@ inline bool intersect(frustum *f, aabb *bb)
 //    if (out == 8) return false;
 
     return true;
+}
+
 }
 
 #endif //NMUTIL_INTERSECT_H

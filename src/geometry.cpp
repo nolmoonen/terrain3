@@ -24,6 +24,7 @@ void init(geometry *g)
 {
     init_mesh(&g->mesh);
     setup_uniform_buffer(g);
+    nm::load_gl_constants(g->gl_ubo_alignment, g->gl_max_compute_work_group_count);
 }
 
 void cleanup(geometry *g)
@@ -33,28 +34,28 @@ void cleanup(geometry *g)
 }
 
 
-static inline ivec2 idiv2(ivec2 n, ivec2 d)
-{ return ivec2(idiv(n.x, d.x), idiv(n.y, d.y)); }
+static inline nm::ivec2 idiv2(nm::ivec2 n, nm::ivec2 d)
+{ return nm::ivec2(nm::idiv(n.x, d.x), nm::idiv(n.y, d.y)); }
 
 /// Snapping clipmap level to a grid.
 /// The clipmap levels only move in steps of texture coordinates.
 /// Computes (-x,-z)-most grid-space position for the levels.
-static ivec2 get_offset_level(const vec2 &camera_pos, uint32_t level)
+static nm::ivec2 get_offset_level(const nm::fvec2 &camera_pos, uint32_t level)
 {
     // convert world-space position to grid space
-    ivec2 scaled_pos(camera_pos / vec2(CLIPMAP_SCALE));
+    nm::ivec2 scaled_pos(camera_pos / nm::fvec2(CLIPMAP_SCALE));
 
     // snap to grid of next level, such that it is always aligned
     const int32_t next_level_res = int32_t(1u << (level + 1));
-    ivec2 snapped_pos = idiv2(scaled_pos, next_level_res) * next_level_res;
+    nm::ivec2 snapped_pos = idiv2(scaled_pos, nm::ivec2(next_level_res)) * next_level_res;
 
     // subtract one higher level block size from position, to go from the
     // 'center' of the higher level's 'hole', to the (-x,-z)-most point of it
-    ivec2 pos = snapped_pos - int32_t((CLIPMAP_SIZE - 1u) << (level + 1));
+    nm::ivec2 pos = snapped_pos - int32_t((CLIPMAP_SIZE - 1u) << (level + 1));
     return pos;
 }
 
-void update_level_offsets(geometry *g, const vec2 &camera_pos)
+void update_level_offsets(geometry *g, const nm::fvec2 &camera_pos)
 {
     for (uint32_t i = 0; i < CLIPMAP_LEVEL_COUNT; i++) {
         g->level_offsets[i] = get_offset_level(camera_pos, i);
@@ -69,33 +70,33 @@ static inline T *buffer_offset(T *buffer, size_t offset)
 
 /// Returns true if a block with the given range, level, and offset
 /// intersects the current frustum.
-bool intersects_frustum(geometry *g, ivec2 offset, uvec2 range, uint32_t level)
+bool intersects_frustum(geometry *g, nm::ivec2 offset, nm::uvec2 range, uint32_t level)
 {
     // grid-space level offset
-    vec3 lvl_off = vec3(
+    nm::fvec3 lvl_off = nm::fvec3(
             g->level_offsets[level].x, 0.f, g->level_offsets[level].y);
 
     // world-space mesh offset
-    vec3 pos = (lvl_off + vec3(offset.x, 0.f, offset.y)) * CLIPMAP_SCALE;
+    nm::fvec3 pos = (lvl_off + nm::fvec3(offset.x, 0.f, offset.y)) * CLIPMAP_SCALE;
     // world-space mesh extent
-    vec3 extent =
-            vec3(float(range.x), 0.f, float(range.y)) * float(1u << level) *
+    nm::fvec3 extent =
+            nm::fvec3(float(range.x), 0.f, float(range.y)) * float(1u << level) *
             CLIPMAP_SCALE;
     // noise will be in [0, <2]
     extent.y = TERRAIN_AMP * 2.f;
 
     // get two terrain points
-    vec3 start = pos;
-    vec3 end = pos + extent;
+    nm::fvec3 start = pos;
+    nm::fvec3 end = pos + extent;
 
     // the aabb needs the actual minimum and maximum points
-    aabb bb;
-    bb.min = fminf(start, end);
-    bb.max = fmaxf(start, end);
+    nm::aabb bb;
+    bb.min = nm::min(start, end);
+    bb.max = nm::max(start, end);
 
     // add some margin to deal with precision issues
-    bb.min -= vec3(.02f);
-    bb.max += vec3(.02f);
+    bb.min -= nm::fvec3(.02f);
+    bb.max += nm::fvec3(.02f);
 
     return intersect(&g->frustum, &bb);
 }
@@ -110,9 +111,9 @@ draw_info *update_draw_list(
 
     // have to ensure that the uniform buffer is always bound at aligned offsets
     *uniform_buffer_offset = realign_offset(
-            *uniform_buffer_offset +
+        *uniform_buffer_offset +
             info->instance_count * sizeof(instance_data),
-            gl_ubo_alignment);
+        g->gl_ubo_alignment);
 
     return ++info;
 }
@@ -128,7 +129,7 @@ draw_info get_draw_info_quadlet(geometry *g, instance_data *instances)
     instance_data instance;
 
     instance.level = 0;
-    instance.offset = ivec2(2, 2) * (CLIPMAP_SIZE - 1);
+    instance.offset = nm::ivec2(2, 2) * (CLIPMAP_SIZE - 1);
     instance.id = 0;
 
     if (intersects_frustum(g, instance.offset, g->mesh.quadlet.range, 0)) {
@@ -161,7 +162,7 @@ draw_info get_draw_info_quads(geometry *g, instance_data *instances)
                 }
 
                 instance.level = i;
-                instance.offset = ivec2(x, z) * ((CLIPMAP_SIZE - 1) << i);
+                instance.offset = nm::ivec2(x, z) * ((CLIPMAP_SIZE - 1) << i);
 
                 // skip 2 texels horizontally and vertically at the middle to
                 // get a symmetric structure. these regions are filled with
@@ -195,7 +196,7 @@ draw_info get_draw_info_fixup_z(geometry *g, instance_data *instances)
     instance.id = 2;
 
     // +(CLIPMAP_SIZE - 1) offset in z from the -z one at level 0
-    instance.offset = ivec2(2 * (CLIPMAP_SIZE - 1), (CLIPMAP_SIZE - 1));
+    instance.offset = nm::ivec2(2 * (CLIPMAP_SIZE - 1), (CLIPMAP_SIZE - 1));
 
     if (intersects_frustum(g, instance.offset, g->mesh.fixup_z.range, 0)) {
         *instances++ = instance;
@@ -203,7 +204,7 @@ draw_info get_draw_info_fixup_z(geometry *g, instance_data *instances)
     }
 
     // -(CLIPMAP_SIZE - 1) offset in z from the +z one at level 0
-    instance.offset = ivec2(2 * (CLIPMAP_SIZE - 1), 2 * (CLIPMAP_SIZE - 1) + 2);
+    instance.offset = nm::ivec2(2 * (CLIPMAP_SIZE - 1), 2 * (CLIPMAP_SIZE - 1) + 2);
 
     if (intersects_frustum(g, instance.offset, g->mesh.fixup_z.range, 0)) {
         *instances++ = instance;
@@ -215,7 +216,7 @@ draw_info get_draw_info_fixup_z(geometry *g, instance_data *instances)
         // Top region
         instance.level = i;
 
-        instance.offset = ivec2(2 * (CLIPMAP_SIZE - 1), 0) * (1 << i);
+        instance.offset = nm::ivec2(2 * (CLIPMAP_SIZE - 1), 0) * (1 << i);
 
         if (intersects_frustum(g, instance.offset, g->mesh.fixup_z.range, i)) {
             *instances++ = instance;
@@ -224,7 +225,7 @@ draw_info get_draw_info_fixup_z(geometry *g, instance_data *instances)
 
         // Bottom region
         instance.offset =
-                ivec2(2 * (CLIPMAP_SIZE - 1), 3 * (CLIPMAP_SIZE - 1) + 2) *
+                nm::ivec2(2 * (CLIPMAP_SIZE - 1), 3 * (CLIPMAP_SIZE - 1) + 2) *
                 (1 << i);
 
         if (intersects_frustum(g, instance.offset, g->mesh.fixup_z.range, i)) {
@@ -251,7 +252,7 @@ draw_info get_draw_info_fixup_x(geometry *g, instance_data *instances)
     instance.id = 2;
 
     // +(CLIPMAP_SIZE - 1) offset in x from the -x one at level 0
-    instance.offset = ivec2(
+    instance.offset = nm::ivec2(
             (CLIPMAP_SIZE - 1), 2 * (CLIPMAP_SIZE - 1));
 
     if (intersects_frustum(g, instance.offset, g->mesh.fixup_x.range, 0)) {
@@ -260,7 +261,7 @@ draw_info get_draw_info_fixup_x(geometry *g, instance_data *instances)
     }
 
     // -(CLIPMAP_SIZE - 1) offset in x from the +x one at level 0
-    instance.offset = ivec2(
+    instance.offset = nm::ivec2(
             2 * (CLIPMAP_SIZE - 1) + 2, 2 * (CLIPMAP_SIZE - 1));
 
     if (intersects_frustum(g, instance.offset, g->mesh.fixup_x.range, 0)) {
@@ -276,7 +277,7 @@ draw_info get_draw_info_fixup_x(geometry *g, instance_data *instances)
         // The 0.5 texel offset required to sample exactly at the texel center is done in vertex shader.
         instance.level = i;
 
-        instance.offset = ivec2(0, 2 * (CLIPMAP_SIZE - 1)) * (1 << i);
+        instance.offset = nm::ivec2(0, 2 * (CLIPMAP_SIZE - 1)) * (1 << i);
 
         // only add the instance if it's visible
         if (intersects_frustum(g, instance.offset, g->mesh.fixup_x.range, i)) {
@@ -286,7 +287,7 @@ draw_info get_draw_info_fixup_x(geometry *g, instance_data *instances)
 
         // ight side horizontal fixup region
         instance.offset =
-                ivec2(3 * (CLIPMAP_SIZE - 1) + 2, 2 * (CLIPMAP_SIZE - 1)) *
+                nm::ivec2(3 * (CLIPMAP_SIZE - 1) + 2, 2 * (CLIPMAP_SIZE - 1)) *
                 (1 << i);
 
         // only add the instance if it's visible
@@ -301,7 +302,7 @@ draw_info get_draw_info_fixup_x(geometry *g, instance_data *instances)
 
 draw_info get_draw_info_degenerate(
         geometry *g, instance_data *instances, const block &block,
-        const ivec2 &offset, const ivec2 &ring_offset, int id)
+        const nm::ivec2 &offset, const nm::ivec2 &ring_offset, int id)
 {
     draw_info info;
     info.instance_count = 0;
@@ -332,27 +333,27 @@ draw_info get_draw_info_degenerate(
 draw_info get_draw_info_degenerate_neg_x(geometry *g, instance_data *instances)
 {
     return get_draw_info_degenerate(
-            g, instances, g->mesh.degenerate_neg_x, ivec2(0), ivec2(0), 4);
+            g, instances, g->mesh.degenerate_neg_x, nm::ivec2(0), nm::ivec2(0), 4);
 }
 
 draw_info get_draw_info_degenerate_pos_x(geometry *g, instance_data *instances)
 {
     return get_draw_info_degenerate(
             g, instances, g->mesh.degenerate_pos_x,
-            ivec2(4 * (CLIPMAP_SIZE - 1), 0), ivec2(2, 0), 5);
+            nm::ivec2(4 * (CLIPMAP_SIZE - 1), 0), nm::ivec2(2, 0), 5);
 }
 
 draw_info get_draw_info_degenerate_neg_z(geometry *g, instance_data *instances)
 {
     return get_draw_info_degenerate(
-            g, instances, g->mesh.degenerate_neg_z, ivec2(0), ivec2(0), 6);
+            g, instances, g->mesh.degenerate_neg_z, nm::ivec2(0), nm::ivec2(0), 6);
 }
 
 draw_info get_draw_info_degenerate_pos_z(geometry *g, instance_data *instances)
 {
     return get_draw_info_degenerate(
             g, instances, g->mesh.degenerate_pos_z,
-            ivec2(0, 4 * (CLIPMAP_SIZE - 1)), ivec2(0, 2), 7);
+            nm::ivec2(0, 4 * (CLIPMAP_SIZE - 1)), nm::ivec2(0, 2), 7);
 }
 
 draw_info get_draw_info_trim(
@@ -369,8 +370,8 @@ draw_info get_draw_info_trim(
 
     // from level 1 and out, we only need a single L-shaped trim region
     for (uint32_t i = 1; i < CLIPMAP_LEVEL_COUNT; i++) {
-        ivec2 offset_prev_level = g->level_offsets[i - 1];
-        ivec2 offset_current_level =
+        nm::ivec2 offset_prev_level = g->level_offsets[i - 1];
+        nm::ivec2 offset_current_level =
                 g->level_offsets[i] + ((CLIPMAP_SIZE - 1) << i);
 
         // there are four different ways (top-right, bottom-right, top-left,
@@ -379,12 +380,12 @@ draw_info get_draw_info_trim(
         // so we can check if a particular trim type should be used for this
         // level. only one conditional will return true for a given level.
 
-        ivec2 off =
+        nm::ivec2 off =
                 (offset_prev_level - offset_current_level) / int32_t(1u << i);
         if (!cond(off)) continue;
 
         instance.level = i;
-        instance.offset = ivec2((CLIPMAP_SIZE - 1) << i);
+        instance.offset = nm::ivec2((CLIPMAP_SIZE - 1) << i);
 
         if (intersects_frustum(g, instance.offset, block.range, i)) {
             *instances++ = instance;
@@ -397,16 +398,16 @@ draw_info get_draw_info_trim(
 
 // offset.x and offset.y are either 0 or 1 (width of trim)
 
-static inline bool trim_cond_pos_x_neg_z(const ivec2 &offset)
+static inline bool trim_cond_pos_x_neg_z(const nm::ivec2 &offset)
 { return offset.x == 0 && offset.y == 1; }
 
-static inline bool trim_cond_neg_x_neg_z(const ivec2 &offset)
+static inline bool trim_cond_neg_x_neg_z(const nm::ivec2 &offset)
 { return offset.x == 1 && offset.y == 1; }
 
-static inline bool trim_cond_pos_x_pos_z(const ivec2 &offset)
+static inline bool trim_cond_pos_x_pos_z(const nm::ivec2 &offset)
 { return offset.x == 0 && offset.y == 0; }
 
-static inline bool trim_cond_neg_x_pos_z(const ivec2 &offset)
+static inline bool trim_cond_neg_x_pos_z(const nm::ivec2 &offset)
 { return offset.x == 1 && offset.y == 0; }
 
 draw_info get_draw_info_trim_pos_x_neg_z(geometry *g, instance_data *instances)
@@ -442,7 +443,7 @@ void update_draw_list(geometry *g)
     GL_CHECK_ERRORS();
 
     if (!data) {
-        nmutil::log(nmutil::LOG_ERROR, "failed to map uniform buffer\n");
+        nm::log(nm::LOG_ERROR, "failed to map uniform buffer\n");
         return;
     }
 
@@ -528,10 +529,8 @@ void render(geometry *g)
         // todo put index in define
         // bind uniform buffer at correct offset
         GL_CHECK(glBindBufferRange(
-                GL_UNIFORM_BUFFER, 0, g->uniform_buffer,
-                di.uniform_buffer_offset, realign_offset(
-                        di.instance_count * sizeof(instance_data),
-                        gl_ubo_alignment)));
+            GL_UNIFORM_BUFFER, 0, g->uniform_buffer,
+            di.uniform_buffer_offset, realign_offset(di.instance_count * sizeof(instance_data), g->gl_ubo_alignment)));
 
         // draw all instances
         render_mesh(&g->mesh, di);
