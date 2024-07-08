@@ -1,11 +1,11 @@
 #ifndef TERRAIN3_GEOMETRY_H
 #define TERRAIN3_GEOMETRY_H
 
-#include <nmutil/matrix.h>
-#include <nmutil/gl.h>
-#include "terrain_defs.h"
 #include "mesh.h"
 #include "nmutil/intersect.h"
+#include "terrain_defs.h"
+#include <nmutil/gl.h>
+#include <nmutil/matrix.h>
 
 /// This file and its implementation encapsulate the creation of the geometry
 /// of the terrain representation. It maintains the state of which parts of the
@@ -34,19 +34,19 @@ struct geometry {
 };
 
 /// Operates on a grid coordinate.
-typedef bool (*trim_cond)(const nm::ivec2 &offset);
+typedef bool (*trim_cond)(const nm::ivec2& offset);
 
-void init(geometry *g);
+void init(geometry* g);
 
-void cleanup(geometry *g);
+void cleanup(geometry* g);
 
 /// Sets the offset of each level, based on the camera position.
-void update_level_offsets(geometry *g, const nm::fvec2 &camera_pos);
+void update_level_offsets(geometry* g, const nm::fvec2& camera_pos);
 
 /// Updates the draw list, which maintains which parts of the mesh are drawn
 /// and where.
-void update_draw_list(geometry *g);
+void update_draw_list(geometry* g);
 
-void render(geometry *g);
+void render(geometry* g);
 
 #endif //TERRAIN3_GEOMETRY_H

@@ -10,8 +10,8 @@
 
 namespace nm {
 
-NM_VAR_SPECIFIER constexpr float e         = 2.7182818284590452354;  /* e */
-NM_VAR_SPECIFIER constexpr float log2e     = 1.4426950408889634074;  /* log_2 e */
+NM_VAR_SPECIFIER constexpr float e         = 2.7182818284590452354; /* e */
+NM_VAR_SPECIFIER constexpr float log2e     = 1.4426950408889634074; /* log_2 e */
 NM_VAR_SPECIFIER constexpr float log10e    = 0.43429448190325182765; /* log_10 e */
 NM_VAR_SPECIFIER constexpr float ln2       = 0.69314718055994530942; /* log_e 2 */
 NM_VAR_SPECIFIER constexpr float ln10      = 2.30258509299404568402; /* log_e 10 */

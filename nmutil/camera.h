@@ -2,17 +2,17 @@
 #define NMUTIL_CAMERA_H
 
 #include "math.h"
-#include "vector.h"
 #include "matrix.h"
+#include "vector.h"
 
 struct camera {
     const float MIN_PITCH = -.49f * nm::pi;
     const float MAX_PITCH = +.49f * nm::pi;
-    const float MAX_ZOOM = 32.f;
-    const float MIN_ZOOM = .1f;
+    const float MAX_ZOOM  = 32.f;
+    const float MIN_ZOOM  = .1f;
 
     float aspect_ratio;
-    float fov;          // vertical field of view (radians!)
+    float fov; // vertical field of view (radians!)
 
     /// Target location around which this camera orbits.
     nm::fvec3 target;
@@ -27,8 +27,7 @@ struct camera {
     float far_clipping_dist;
 
     void init(
-            float p_aspect_ratio, float p_fov, float p_near_clipping_dist,
-            float p_far_clipping_dist);
+        float p_aspect_ratio, float p_fov, float p_near_clipping_dist, float p_far_clipping_dist);
 
     /// Add a given value to the zoom level.
     void add_zoom(float zoom_delta);
@@ -53,16 +52,15 @@ struct camera {
 };
 
 inline void camera::init(
-        float p_aspect_ratio, float p_fov, float p_near_clipping_dist,
-        float p_far_clipping_dist)
+    float p_aspect_ratio, float p_fov, float p_near_clipping_dist, float p_far_clipping_dist)
 {
-    aspect_ratio = p_aspect_ratio;
-    fov = p_fov;
+    aspect_ratio       = p_aspect_ratio;
+    fov                = p_fov;
     near_clipping_dist = p_near_clipping_dist;
-    far_clipping_dist = p_far_clipping_dist;
+    far_clipping_dist  = p_far_clipping_dist;
 
-    target = nm::fvec3(0.f);
-    angles = nm::fvec3(0.f);
+    target     = nm::fvec3(0.f);
+    angles     = nm::fvec3(0.f);
     zoom_level = 10.f;
 }
 
@@ -81,7 +79,7 @@ inline nm::mat4 camera::get_view_matrix()
 inline nm::mat4 camera::get_proj_matrix() const
 {
     return nm::mat4::perspective(
-            fov, aspect_ratio, near_clipping_dist, far_clipping_dist, nm::coord::right_handed);
+        fov, aspect_ratio, near_clipping_dist, far_clipping_dist, nm::coord::right_handed);
 }
 
 inline nm::fvec3 camera::get_camera_position()
@@ -102,19 +100,16 @@ inline nm::fvec3 camera::get_camera_position()
     return position + target;
 }
 
-inline void camera::set_aspect(float p_aspect_ratio)
-{
-    aspect_ratio = p_aspect_ratio;
-}
+inline void camera::set_aspect(float p_aspect_ratio) { aspect_ratio = p_aspect_ratio; }
 
 inline void camera::translate(float offset_xpos, float offset_ypos)
 {
     float PANNING_SENSITIVITY = .1f;
 
-    nm::vec3 center = get_camera_position();
-    nm::vec3 forward = target - center;
-    nm::vec3 world_up = nm::vec3(0.f, 1.f, 0.f);
-    nm::vec3 right = nm::normalize(nm::cross(forward, world_up));
+    nm::vec3 center    = get_camera_position();
+    nm::vec3 forward   = target - center;
+    nm::vec3 world_up  = nm::vec3(0.f, 1.f, 0.f);
+    nm::vec3 right     = nm::normalize(nm::cross(forward, world_up));
     nm::vec3 screen_up = nm::normalize(nm::cross(right, forward));
 
     // to "move" right, we translate to the left
@@ -126,10 +121,10 @@ inline void camera::rotate(float offset_xpos, float offset_ypos)
 {
     const float ROTATION_SENSITIVITY = .03f;
 
-    angles.x += (float) -offset_ypos * ROTATION_SENSITIVITY; // pitch
+    angles.x += (float)-offset_ypos * ROTATION_SENSITIVITY; // pitch
     // enforce max and min pitch
     angles.x = nm::clampf(angles.x, MIN_PITCH, MAX_PITCH);
-    angles.y += (float) -offset_xpos * ROTATION_SENSITIVITY; // yaw
+    angles.y += (float)-offset_xpos * ROTATION_SENSITIVITY; // yaw
 }
 
 #endif // NMUTIL_CAMERA_H

@@ -1,9 +1,9 @@
 #ifndef TERRAIN3_HEIGHTMAP_H
 #define TERRAIN3_HEIGHTMAP_H
 
+#include "nmutil/gl.h"
 #include "nmutil/vector.h"
 #include "terrain_defs.h"
-#include "nmutil/gl.h"
 
 /// This file and its implementation encapsulate the heightmap, which is the
 /// texture that represents the heights and the gradients of the terrain.
@@ -54,21 +54,21 @@ struct heightmap {
 
     /// Has to be a power of two. This is used to generate the terrain.
 #define NOISE_SIZE 256
-    uint8_t *noise;
+    uint8_t* noise;
 };
 
-nm_ret init(heightmap *hm);
+nm_ret init(heightmap* hm);
 
-void cleanup(heightmap *hm);
+void cleanup(heightmap* hm);
 
-void update(heightmap *hm, nm::ivec2 level_offsets[CLIPMAP_LEVEL_COUNT]);
+void update(heightmap* hm, nm::ivec2 level_offsets[CLIPMAP_LEVEL_COUNT]);
 
 /// Returns a height in [0,1] of a world-space position.
-nm::fvec3 get_height(heightmap *hm, nm::fvec2 pos);
+nm::fvec3 get_height(heightmap* hm, nm::fvec2 pos);
 
 /// Encapsulation for applying the heightmap texture.
-void use_texture(heightmap *hm);
+void use_texture(heightmap* hm);
 
-void unuse_texture(heightmap *hm);
+void unuse_texture(heightmap* hm);
 
 #endif //TERRAIN3_HEIGHTMAP_H

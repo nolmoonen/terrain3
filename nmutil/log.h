@@ -31,10 +31,7 @@ void log(log_level_e t_level, const char* t_format, ...)
     }
 }
 
-void set_log_level(log_level_e t_level)
-{
-    m_level = t_level;
-}
+void set_log_level(log_level_e t_level) { m_level = t_level; }
 
 #endif // NM_LOG_IMPLEMENTATION
 

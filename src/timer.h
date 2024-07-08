@@ -9,7 +9,7 @@ struct timer {
 
 static LARGE_INTEGER frequency{};
 
-void timer_start(timer *t)
+void timer_start(timer* t)
 {
     if (!frequency.QuadPart) {
         // cannot fail on WinXP or later and gets non-zero value
@@ -20,13 +20,13 @@ void timer_start(timer *t)
 }
 
 /// Resets timer and returns elapsed time in seconds.
-float timer_lap(timer *t)
+float timer_lap(timer* t)
 {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     LARGE_INTEGER elapsed;
     elapsed.QuadPart = now.QuadPart - t->start.QuadPart;
-    t->start = now;
+    t->start         = now;
 
     return float(elapsed.QuadPart) / float(frequency.QuadPart);
 }

@@ -89,10 +89,10 @@ struct mesh {
 };
 
 /// Sets up both the vertex buffer and the index buffer.
-void init_mesh(mesh *mesh);
+void init_mesh(mesh* mesh);
 
-void cleanup_mesh(mesh *mesh);
+void cleanup_mesh(mesh* mesh);
 
-void render_mesh(mesh *mesh, draw_info di);
+void render_mesh(mesh* mesh, draw_info di);
 
 #endif //TERRAIN3_MESH_H

@@ -314,7 +314,7 @@ NM_SPECIFIERS inline mat4 mat4::look_at(fvec3 eye, fvec3 center, fvec3 up)
     // (lookAtRH)
     fvec3 f(normalize(center - eye)); // forward
     fvec3 s(normalize(cross(f, up))); // right
-    fvec3 u(cross(s, f));             // up
+    fvec3 u(cross(s, f)); // up
 
     mat4 tmp{};
     tmp.data[0] = s.x;
@@ -362,8 +362,8 @@ NM_SPECIFIERS inline mat4 mat4::perspective(
     tmp.data[6] = 0.f;
     tmp.data[7] = 0.f;
 
-    tmp.data[8]  = 0.f;
-    tmp.data[9]  = 0.f;
+    tmp.data[8] = 0.f;
+    tmp.data[9] = 0.f;
     // [2][2]
     tmp.data[10] = (far_plane + near_plane) / (far_plane - near_plane) * flip;
     // [2][3]

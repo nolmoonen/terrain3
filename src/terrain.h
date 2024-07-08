@@ -1,11 +1,11 @@
 #ifndef TERRAIN3_TERRAIN_H
 #define TERRAIN3_TERRAIN_H
 
-#include <nmutil/matrix.h>
-#include <nmutil/gl.h>
+#include "comm.h"
 #include "geometry.h"
 #include "heightmap.h"
-#include "comm.h"
+#include <nmutil/gl.h>
+#include <nmutil/matrix.h>
 
 /// This file and its implementation encapsulate the terrain generation and
 /// representation system.
@@ -26,19 +26,17 @@ struct terrain {
     nm::tex cliff_norm;
 };
 
-nm_ret init(terrain *t);
+nm_ret init(terrain* t);
 
-void update(terrain *t, nm::fvec3 target);
+void update(terrain* t, nm::fvec3 target);
 
 /// Render the mesh and heightmap one time with a specified program.
-void render(terrain *t, nm::shader_program *prog, nm::mat4 vp, nm::fvec3 target);
+void render(terrain* t, nm::shader_program* prog, nm::mat4 vp, nm::fvec3 target);
 
 /// Note: target should not have been changed between update and render
 /// calls.
-void render(
-        terrain *t, nm::mat4 vp, nm::fvec3 target, operation_draw draw_op,
-        bool is_wireframe);
+void render(terrain* t, nm::mat4 vp, nm::fvec3 target, operation_draw draw_op, bool is_wireframe);
 
-void cleanup(terrain *t);
+void cleanup(terrain* t);
 
 #endif //TERRAIN3_TERRAIN_H

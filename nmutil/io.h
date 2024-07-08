@@ -1,18 +1,17 @@
 #ifndef NMUTIL_IO_H
 #define NMUTIL_IO_H
 
-#include <cstdio>
 #include "defs.h"
 #include "log.h"
+#include <cstdio>
 
 namespace nm {
-    int read_file(char **buffer, size_t *size, const char *file_name);
+int read_file(char** buffer, size_t* size, const char* file_name);
 }
 
-inline nm_ret nm::read_file(
-        char **buffer, size_t *size, const char *file_name)
+inline nm_ret nm::read_file(char** buffer, size_t* size, const char* file_name)
 {
-    FILE *file;
+    FILE* file;
 
     errno_t err = fopen_s(&file, file_name, "rb");
     if (!file || err) {

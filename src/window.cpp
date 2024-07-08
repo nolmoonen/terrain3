@@ -17,8 +17,9 @@
 
 constexpr size_t glfw_key_count          = GLFW_KEY_LAST + 1;
 constexpr size_t glfw_mouse_button_count = GLFW_MOUSE_BUTTON_LAST + 1;
-static_assert(glfw_key_count + glfw_mouse_button_count <= 512,
-              "this system assumes the last glfw key values are not too large\n");
+static_assert(
+    glfw_key_count + glfw_mouse_button_count <= 512,
+    "this system assumes the last glfw key values are not too large\n");
 
 struct keybutton_state {
     bool is_pressed;
@@ -45,18 +46,18 @@ struct window_state {
 };
 
 struct window {
-    GLFWwindow *handle;
+    GLFWwindow* handle;
     window_state state;
 };
 
-static void callback_error(int error, const char *description)
+static void callback_error(int error, const char* description)
 {
     nm::log(nm::LOG_ERROR, "glfw %s\n", description);
 }
 
-static void callback_key(GLFWwindow *glfw_window, int key, int scancode, int action, int mods)
+static void callback_key(GLFWwindow* glfw_window, int key, int scancode, int action, int mods)
 {
-    window *w = (window *)glfwGetWindowUserPointer(glfw_window);
+    window* w = (window*)glfwGetWindowUserPointer(glfw_window);
 
     if (key < 0 || key > GLFW_KEY_LAST) {
         // unknown key and has no slot in the state array
@@ -66,7 +67,7 @@ static void callback_key(GLFWwindow *glfw_window, int key, int scancode, int act
     // GLFW_PRESS, GLFW_RELEASE, GLFW_REPEAT
     // if GLFW_REPEAT, always also has PRESS or RELEASE
 
-    keybutton_state *kbs = &(w->state.key_states[key]);
+    keybutton_state* kbs = &(w->state.key_states[key]);
     if (action == GLFW_PRESS) {
         kbs->was_pressed = true;
         kbs->is_pressed  = true;
@@ -76,18 +77,18 @@ static void callback_key(GLFWwindow *glfw_window, int key, int scancode, int act
     }
 }
 
-static void callback_framebuffer_size(GLFWwindow *glfw_window, int size_x, int size_y)
+static void callback_framebuffer_size(GLFWwindow* glfw_window, int size_x, int size_y)
 {
-    window *w = (window *)glfwGetWindowUserPointer(glfw_window);
+    window* w = (window*)glfwGetWindowUserPointer(glfw_window);
 
     nm::ivec2 framebuffer_size_new(size_x, size_y);
     w->state.framebuffer_size_delta = framebuffer_size_new - nm::ivec2(w->state.framebuffer_size);
     w->state.framebuffer_size       = nm::uvec2(framebuffer_size_new);
 }
 
-static void callback_mouse_button(GLFWwindow *glfw_window, int button, int action, int mods)
+static void callback_mouse_button(GLFWwindow* glfw_window, int button, int action, int mods)
 {
-    window *w = (window *)glfwGetWindowUserPointer(glfw_window);
+    window* w = (window*)glfwGetWindowUserPointer(glfw_window);
 
     if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) {
         // unknown key and has no slot in the state array
@@ -96,7 +97,7 @@ static void callback_mouse_button(GLFWwindow *glfw_window, int button, int actio
 
     // GLFW_PRESS or GLFW_RELEASE
 
-    keybutton_state *kbs = &(w->state.mouse_button_states[button]);
+    keybutton_state* kbs = &(w->state.mouse_button_states[button]);
     if (action == GLFW_PRESS) {
         kbs->was_pressed = true;
         kbs->is_pressed  = true;
@@ -106,23 +107,23 @@ static void callback_mouse_button(GLFWwindow *glfw_window, int button, int actio
     }
 }
 
-static void callback_scroll(GLFWwindow *glfw_window, double xoffset, double yoffset)
+static void callback_scroll(GLFWwindow* glfw_window, double xoffset, double yoffset)
 {
-    window *w = (window *)glfwGetWindowUserPointer(glfw_window);
+    window* w = (window*)glfwGetWindowUserPointer(glfw_window);
 
     w->state.scroll_pos_delta = nm::dvec2(xoffset, yoffset);
 }
 
-static void callback_cursor_position(GLFWwindow *glfw_window, double xpos, double ypos)
+static void callback_cursor_position(GLFWwindow* glfw_window, double xpos, double ypos)
 {
-    window *w = (window *)glfwGetWindowUserPointer(glfw_window);
+    window* w = (window*)glfwGetWindowUserPointer(glfw_window);
 
     nm::dvec2 mouse_pos_new(xpos, ypos);
     w->state.mouse_pos_delta = mouse_pos_new - w->state.mouse_pos;
     w->state.mouse_pos       = mouse_pos_new;
 }
 
-static void reset_deltas(window *w)
+static void reset_deltas(window* w)
 {
     w->state.framebuffer_size_delta = nm::ivec2(0);
     w->state.mouse_pos_delta        = nm::dvec2(0);
@@ -139,7 +140,7 @@ static void reset_deltas(window *w)
     }
 }
 
-static void init_state(window *w)
+static void init_state(window* w)
 {
     int32_t size_x, size_y;
     glfwGetWindowSize(w->handle, &size_x, &size_y);
@@ -154,8 +155,7 @@ static void init_state(window *w)
     // skip some invalid values TODO not perfect solution
     const int offset = 32;
     static_assert(offset <= glfw_key_count);
-    for (int i = offset; i < glfw_key_count; i++)
-    {
+    for (int i = offset; i < glfw_key_count; i++) {
         w->state.key_states[i].is_pressed = glfwGetKey(w->handle, i) == GLFW_PRESS;
     }
 
@@ -169,9 +169,9 @@ static void init_state(window *w)
     reset_deltas(w);
 }
 
-nm_ret init(window **w, uint32_t size_x, uint32_t size_y, const char *title)
+nm_ret init(window** w, uint32_t size_x, uint32_t size_y, const char* title)
 {
-    *w = (window *)malloc(sizeof(window));
+    *w = (window*)malloc(sizeof(window));
 
     glfwSetErrorCallback(callback_error);
 
@@ -234,9 +234,9 @@ success:
     return NM_SUCCESS;
 }
 
-void *get_handle(window *w) { return w->handle; }
+void* get_handle(window* w) { return w->handle; }
 
-void cleanup(window *w)
+void cleanup(window* w)
 {
     // todo glad cleanup?
     glfwDestroyWindow(w->handle);
@@ -245,47 +245,47 @@ void cleanup(window *w)
     free(w);
 }
 
-bool is_should_close(window *w) { return glfwWindowShouldClose(w->handle); }
+bool is_should_close(window* w) { return glfwWindowShouldClose(w->handle); }
 
-void set_should_close(window *w) { glfwSetWindowShouldClose(w->handle, GLFW_TRUE); }
+void set_should_close(window* w) { glfwSetWindowShouldClose(w->handle, GLFW_TRUE); }
 
-void swap_buffers(window *w) { glfwSwapBuffers(w->handle); }
+void swap_buffers(window* w) { glfwSwapBuffers(w->handle); }
 
-void reset_events(window *w) { reset_deltas(w); }
+void reset_events(window* w) { reset_deltas(w); }
 
 void poll_events() { glfwPollEvents(); }
 
-bool is_active(window *w)
+bool is_active(window* w)
 {
     // todo: implement
     return true;
 }
 
-nm::uvec2 framebuffer_size(window *w) { return w->state.framebuffer_size; }
+nm::uvec2 framebuffer_size(window* w) { return w->state.framebuffer_size; }
 
-nm::dvec2 mouse_pos(window *w) { return w->state.mouse_pos; }
+nm::dvec2 mouse_pos(window* w) { return w->state.mouse_pos; }
 
-nm::dvec2 scroll_pos_delta(window *w) { return w->state.scroll_pos_delta; }
+nm::dvec2 scroll_pos_delta(window* w) { return w->state.scroll_pos_delta; }
 
-bool was_esc_pressed(window *w) { return w->state.key_states[GLFW_KEY_ESCAPE].was_pressed; }
+bool was_esc_pressed(window* w) { return w->state.key_states[GLFW_KEY_ESCAPE].was_pressed; }
 
-bool is_shift_pressed(window *w) { return w->state.key_states[GLFW_KEY_LEFT_SHIFT].is_pressed; }
+bool is_shift_pressed(window* w) { return w->state.key_states[GLFW_KEY_LEFT_SHIFT].is_pressed; }
 
-bool was_f1_pressed(window *w) { return w->state.key_states[GLFW_KEY_F1].was_pressed; }
+bool was_f1_pressed(window* w) { return w->state.key_states[GLFW_KEY_F1].was_pressed; }
 
-bool was_f2_pressed(window *w) { return w->state.key_states[GLFW_KEY_F2].was_pressed; }
+bool was_f2_pressed(window* w) { return w->state.key_states[GLFW_KEY_F2].was_pressed; }
 
-bool was_f3_pressed(window *w) { return w->state.key_states[GLFW_KEY_F3].was_pressed; }
+bool was_f3_pressed(window* w) { return w->state.key_states[GLFW_KEY_F3].was_pressed; }
 
-bool was_f4_pressed(window *w) { return w->state.key_states[GLFW_KEY_F4].was_pressed; }
+bool was_f4_pressed(window* w) { return w->state.key_states[GLFW_KEY_F4].was_pressed; }
 
-bool was_f5_pressed(window *w) { return w->state.key_states[GLFW_KEY_F5].was_pressed; }
+bool was_f5_pressed(window* w) { return w->state.key_states[GLFW_KEY_F5].was_pressed; }
 
-bool was_enter_pressed(window *w) { return w->state.key_states[GLFW_KEY_ENTER].was_pressed; }
+bool was_enter_pressed(window* w) { return w->state.key_states[GLFW_KEY_ENTER].was_pressed; }
 
-bool was_prtsc_pressed(window *w) { return w->state.key_states[GLFW_KEY_PRINT_SCREEN].was_pressed; }
+bool was_prtsc_pressed(window* w) { return w->state.key_states[GLFW_KEY_PRINT_SCREEN].was_pressed; }
 
-bool is_mmb_pressed(window *w)
+bool is_mmb_pressed(window* w)
 {
     return w->state.mouse_button_states[GLFW_MOUSE_BUTTON_MIDDLE].is_pressed;
 }

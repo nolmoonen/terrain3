@@ -1,39 +1,39 @@
 #ifndef TERRAIN3_NOISE_H
 #define TERRAIN3_NOISE_H
 
-#include "nmutil/vector.h"
 #include "nmutil/math.h"
 #include "nmutil/matrix.h"
+#include "nmutil/vector.h"
 
 /// return value noise (in x) in [0,1] and its derivatives (in yz)
 /// based on https://www.shadertoy.com/view/4dXBRH
-inline nm::fvec3 noised_value(nm::fvec2 p, uint8_t *noise, uint32_t noise_dim, nm::fvec4 *dd)
+inline nm::fvec3 noised_value(nm::fvec2 p, uint8_t* noise, uint32_t noise_dim, nm::fvec4* dd)
 {
     nm::ivec2 i = nm::ivec2(floorf(p));
     nm::fvec2 f = nm::fractf(p);
 
 #if 1
     // quintic interpolation
-    nm::fvec2 u = f * f * f * (f * (f * 6.f - 15.f) + 10.f);
-    nm::fvec2 du = 30.f * f * f * (f * (f - 2.f) + 1.f);
+    nm::fvec2 u   = f * f * f * (f * (f * 6.f - 15.f) + 10.f);
+    nm::fvec2 du  = 30.f * f * f * (f * (f - 2.f) + 1.f);
     nm::fvec2 ddu = 60.f * f * (f * (2.f * f - 3.f) + 1.f);
 #else
     // cubic interpolation
-    nm::fvec2 u = f * f * (3.f - 2.f * f);
+    nm::fvec2 u  = f * f * (3.f - 2.f * f);
     nm::fvec2 du = 6.f * f * (1.f - f);
 #endif
 
     // samples in [0, 1)
     // AND is valid since noise_dim is power of two
-    int32_t s = int32_t(noise_dim) - 1;
+    int32_t s       = int32_t(noise_dim) - 1;
     nm::ivec2 idx_a = (i + nm::ivec2(0, 0)) & s;
-    float va = (float) noise[idx_a.y * noise_dim + idx_a.x] / (float) UINT8_MAX;
+    float va        = (float)noise[idx_a.y * noise_dim + idx_a.x] / (float)UINT8_MAX;
     nm::ivec2 idx_b = (i + nm::ivec2(1, 0)) & s;
-    float vb = (float) noise[idx_b.y * noise_dim + idx_b.x] / (float) UINT8_MAX;
+    float vb        = (float)noise[idx_b.y * noise_dim + idx_b.x] / (float)UINT8_MAX;
     nm::ivec2 idx_c = (i + nm::ivec2(0, 1)) & s;
-    float vc = (float) noise[idx_c.y * noise_dim + idx_c.x] / (float) UINT8_MAX;
+    float vc        = (float)noise[idx_c.y * noise_dim + idx_c.x] / (float)UINT8_MAX;
     nm::ivec2 idx_d = (i + nm::ivec2(1, 1)) & s;
-    float vd = (float) noise[idx_d.y * noise_dim + idx_d.x] / (float) UINT8_MAX;
+    float vd        = (float)noise[idx_d.y * noise_dim + idx_d.x] / (float)UINT8_MAX;
 
     float k0 = va;
     float k1 = vb - va;
@@ -59,17 +59,16 @@ inline nm::fvec3 noised_value(nm::fvec2 p, uint8_t *noise, uint32_t noise_dim, n
 }
 
 /// Note: not normalized, ranges from [0, <2].
-inline nm::fvec3 terrain_noise(
-        nm::fvec2 p, uint8_t *noise, uint32_t noise_dim)
+inline nm::fvec3 terrain_noise(nm::fvec2 p, uint8_t* noise, uint32_t noise_dim)
 {
     float f = 1.9f; // lacunarity
     float s = .55f; // gain
 
-    const nm::mat2 m2 = nm::mat2(.8f, -.6f, .6f, .8f);  // rotation matrix
+    const nm::mat2 m2  = nm::mat2(.8f, -.6f, .6f, .8f); // rotation matrix
     const nm::mat2 m2t = nm::mat2(.8f, .6f, -.6f, .8f); // and its transpose
 
-    float a = 0.f;      // accumulated height
-    float b = 1.f;      // current height multiplier
+    float a     = 0.f; // accumulated height
+    float b     = 1.f; // current height multiplier
     nm::fvec2 e = nm::fvec2(0.f); // accumulated helper value to scale the noise with
     nm::fvec2 d = nm::fvec2(0.f); // accumulated derivative
 
