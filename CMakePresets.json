@@ -5,6 +5,9 @@
       "name": "win",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "/Wall"
+      },
       "hidden": true
     },
     {

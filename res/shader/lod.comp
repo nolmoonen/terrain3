@@ -38,7 +38,7 @@ vec3 noised_value(in vec2 p, out vec4 dd)
     vec2 ddu = 60.f * f * (f * (2.f * f - 3.f) + 1.f);
 
     int s = int(DEF_NOISE_SIZE) - 1;
-    float va = imageLoad(uni_noise, (i + ivec2(0, 0)) & s).x;
+    float va = imageLoad(uni_noise, (i + ivec2(0, 0)) & s).x; // [0, 1]
     float vb = imageLoad(uni_noise, (i + ivec2(1, 0)) & s).x;
     float vc = imageLoad(uni_noise, (i + ivec2(0, 1)) & s).x;
     float vd = imageLoad(uni_noise, (i + ivec2(1, 1)) & s).x;
@@ -48,8 +48,7 @@ vec3 noised_value(in vec2 p, out vec4 dd)
     float k2 = vc - va;
     float k4 = va - vb - vc + vd;
 
-    // n
-    float value = k0 + k1 * u.x + k2 * u.y + k4 * u.x * u.y;
+    float value = k0 + k1 * u.x + k2 * u.y + k4 * u.x * u.y; // [0, 1]
 
     // n/dx and n/dy
     vec2 derivatives = vec2(du * (vec2(u.y, u.x) * k4 + vec2(k1, k2)));
@@ -63,7 +62,7 @@ vec3 noised_value(in vec2 p, out vec4 dd)
     return vec3(value, derivatives);
 }
 
-vec3 terrain_noise(in vec2 p)
+void terrain_noise(in vec2 p, out float height, out vec2 grad, out vec2 grad_low)
 {
     float f = 1.9f;
     float s = .55f;
@@ -97,23 +96,62 @@ vec3 terrain_noise(in vec2 p)
         b *= s;
         p = f * m2 * p;
         m = f * m2t * m;
+        if (i == 5)
+        {
+            grad_low = d;
+        }
     }
 
-    return vec3(a, d);
+    height = a;
+    grad = d;
 }
 
-// take in a world-space position, return the height at that location
-// and the gradient of the terrain there
-vec3 get_terrain(in vec2 pos)
+float get_river(in vec2 p)
 {
-    vec3 t = terrain_noise(DEF_TERRAIN_SCA * pos);
-    float height = DEF_TERRAIN_AMP * t.x;
-    vec2 grad = DEF_TERRAIN_AMP * DEF_TERRAIN_SCA * t.yz;
+    // try to decorrelate with the other noise function
+    float f = 1.95f;
+    float s = .48f;
 
-    return vec3(height, grad);
+    const mat2 m2 = mat2(.8f, -.6f, .6f, .8f);
+
+    float a = 0.f;
+    float b = 1.f;
+    for (int i = 0; i < 3; i++) {
+        vec4 dd; // TODO do not need derivative
+        vec3 n = noised_value(p, dd); // [0, 1]
+        a += b * n.x;
+        b *= s;
+        p = f * m2 * p;
+    }
+    a *= .5f; // [-1, 1]
+    a = 1.f - 2.f * a; // ??
+    a = 1.f - abs(a); // [0, 1]
+
+    return smoothstep(.95f, 1.f, a);
 }
 
-void main ()
+// take in a world-space position
+vec4 get_terrain(in vec2 pos)
+{
+    float height;
+    vec2 grad;
+    vec2 grad_low;
+    terrain_noise(DEF_TERRAIN_SCA * pos, height, grad, grad_low);
+    // return the height at pos
+    height = DEF_TERRAIN_AMP * height; 
+    grad = DEF_TERRAIN_AMP * DEF_TERRAIN_SCA * grad;
+
+    // TODO can we guide the additional octaves by the river value?
+    float gradient = length(grad_low); // [0, 1]
+    float grad_factor = 1.f - smoothstep(0.f, .3f, .1f * gradient);
+    float scale = DEF_TERRAIN_SCA; // the lower the value, the more sparse the rivers are
+    float river = grad_factor * get_river(pos * scale);
+    height -= river * 10.f;
+
+    return vec4(height, grad, river);
+}
+
+void main()
 {
     // index among each dimension
     uvec3 idx = gl_WorkGroupID * gl_WorkGroupSize + gl_LocalInvocationID;
@@ -126,10 +164,10 @@ void main ()
         vec2 pos = DEF_CLIPMAP_SCALE * vec2(
         (this_info.start + ivec2(idx.xy)) << this_info.level);
 
-        // get height and gradients
-        vec3 val = get_terrain(pos);
+        // get height, gradients, and river
+        vec4 val = get_terrain(pos);
 
         ivec3 tex_idx = ivec3((this_info.tex + idx.xy), this_info.level);
-        imageStore(uni_img_output, tex_idx, vec4(val, 0.f));
+        imageStore(uni_img_output, tex_idx, val);
     }
 }

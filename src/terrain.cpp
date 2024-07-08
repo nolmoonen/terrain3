@@ -287,7 +287,7 @@ void render(terrain* t, nm::mat4 vp, nm::fvec3 target, operation_draw draw_op, b
     switch (draw_op) {
     case DEFAULT:
         render(t, &t->default_program, vp, target);
-        render(t, &t->water_program, vp, target);
+        // render(t, &t->water_program, vp, target);
         break;
     case DEBUG:
         render(t, &t->debug_program, vp, target);

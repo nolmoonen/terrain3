@@ -16,6 +16,7 @@ uniform sampler2D grass_norm;
 uniform sampler2D cliff_diff;
 uniform sampler2D cliff_norm;
 
+in float val_river;
 in float val_height;
 in vec2 val_lod;
 in float val_fog;
@@ -56,6 +57,7 @@ void main()
 
     float factor = .5f * diff + .5f * ambi;
     vec3 color = tex_diff * factor;
+    color += vec3(0.f, 0.f, val_river);
 
     color = mix(color, vec3(.5f, .6f, .7f), val_fog);
 

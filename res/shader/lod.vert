@@ -34,6 +34,7 @@ uniform uni_instance_data {
 #define LOCATION_VERTEX 0
 layout(location = LOCATION_VERTEX) in uvec2 in_vertex;
 
+out float val_river;
 out float val_height;
 out vec2 val_lod;
 out float val_fog;
@@ -96,15 +97,15 @@ void main()
     // bilinear filtering:
     // obtain low resolution height and normal by interpolating between
     // four grid-aligned points on a lower resolution (higher level) texture
-    vec3 tex_data_low = vec3(0.f);
-    tex_data_low += texture(uni_heightmap, vec3(texcoord_v0, flevel + 1.f)).rgb;
-    tex_data_low += texture(uni_heightmap, vec3(texcoord_v1, flevel + 1.f)).rgb;
-    tex_data_low += texture(uni_heightmap, vec3(texcoord_v2, flevel + 1.f)).rgb;
-    tex_data_low += texture(uni_heightmap, vec3(texcoord_v3, flevel + 1.f)).rgb;
+    vec4 tex_data_low = vec4(0.f);
+    tex_data_low += texture(uni_heightmap, vec3(texcoord_v0, flevel + 1.f));
+    tex_data_low += texture(uni_heightmap, vec3(texcoord_v1, flevel + 1.f));
+    tex_data_low += texture(uni_heightmap, vec3(texcoord_v2, flevel + 1.f));
+    tex_data_low += texture(uni_heightmap, vec3(texcoord_v3, flevel + 1.f));
     tex_data_low *= .25f;
 
     // high-resolution: x is height, yz is gradient
-    vec3 tex_data_high = texture(uni_heightmap, vec3(texcoord, flevel)).rgb;
+    vec4 tex_data_high = texture(uni_heightmap, vec3(texcoord, flevel));
 
     // find blending factors for heightmap. the detail level must not have
     // any discontinuities or it shows as 'artifacts'.
@@ -117,6 +118,8 @@ void main()
     vec3 norm_low = normalize(vec3(-tex_data_low.y, 1.f, -tex_data_low.z));
 
     val_norm = normalize(mix(norm_high, norm_low, lod_factor));
+
+    val_river = mix(tex_data_high.w, tex_data_low.w, lod_factor);
 
     val_height = terrain_height;
     val_pos = vec3(pos2.x, val_height, pos2.y);
