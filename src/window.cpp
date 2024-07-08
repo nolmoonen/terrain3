@@ -151,9 +151,12 @@ static void init_state(window *w)
 
     // glfw does not define an absolute value for scrolling
 
-    for (uint32_t i = 0; i < glfw_key_count; i++) {
-        // todo: this is technically invalid as it includes invalid key values
-        w->state.key_states[i].is_pressed = glfwGetKey(w->handle, (int)i) == GLFW_PRESS;
+    // skip some invalid values TODO not perfect solution
+    const int offset = 32;
+    static_assert(offset <= glfw_key_count);
+    for (int i = offset; i < glfw_key_count; i++)
+    {
+        w->state.key_states[i].is_pressed = glfwGetKey(w->handle, i) == GLFW_PRESS;
     }
 
     for (uint32_t i = 0; i < glfw_mouse_button_count; i++) {
